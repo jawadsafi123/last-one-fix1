@@ -1,0 +1,271 @@
+{% doc %}
+  @prompt
+    Here's the exact prompt — copy and paste it into the AI block generator:
+    
+    Create a Shopify product page BLOCK called "Share With Girlies". Minimal, lightweight native share button block.
+    
+    FUNCTIONALITY:
+    
+    On click, trigger the native Web Share API: navigator.share({ title: document.title, url: window.location.href })
+    This opens the device's native share sheet (WhatsApp, Facebook, Instagram, copy link, etc.) automatically
+    Fallback if Web Share API not supported: copy URL to clipboard, then temporarily change share text to "Link copied!" for 2 seconds then revert back
+    Minimal vanilla JS only, no libraries
+    DESIGN — single inline row, no card, no background:
+    
+    display: flex, align-items: center, gap: 8px, cursor: pointer
+    Left: small share SVG icon stroke style, 18x18, color from block.settings.icon_color
+    Middle: share text from block.settings.share_text
+    Right: emoji string from block.settings.emoji_string default "❤️❤️"
+    Text font-size from block.settings.font_size px, font-weight 500, color from block.settings.text_color
+    On hover: opacity 0.75, transition 0.15s
+    No border, no background, no card, no shadow
+    SCHEMA SETTINGS:
+    
+    share_text: text, label "Share Text", default "Share with your girlies"
+    emoji_string: text, label "Emojis (after text)", default "❤️❤️"
+    icon_color: color picker, label "Icon Color", default #c0392b
+    text_color: color picker, label "Text Color", default #444444
+    font_size: range 10-20 step 1 default 14, label "Font Size (px)"
+    padding_top: range 0-40 step 4 default 8, label "Padding Top (px)"
+    padding_bottom: range 0-40 step 4 default 8, label "Padding Bottom (px)"
+    padding_left: range 0-40 step 4 default 0, label "Padding Left (px)"
+    letter_spacing: range 0-5 step 1 default 0, label "Letter Spacing (px)"
+    CSS prefix: sgb to avoid conflicts. Pure Liquid + minimal JS + scoped CSS. Zero dependencies.
+    
+    
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .sgb-share-wrapper-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+    padding-left: {{ block.settings.padding_left }}px;
+  }
+
+  .sgb-share-button-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .sgb-share-button-{{ ai_gen_id }}:hover {
+    opacity: 0.75;
+  }
+
+  .sgb-share-icon-{{ ai_gen_id }} {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .sgb-share-icon-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    stroke: {{ block.settings.icon_color }};
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .sgb-share-text-{{ ai_gen_id }} {
+    font-size: {{ block.settings.font_size }}px;
+    font-weight: 500;
+    color: {{ block.settings.text_color }};
+    letter-spacing: {{ block.settings.letter_spacing }}px;
+  }
+
+  .sgb-share-emoji-{{ ai_gen_id }} {
+    font-size: {{ block.settings.font_size }}px;
+    line-height: 1;
+  }
+{% endstyle %}
+
+<share-with-girlies-{{ ai_gen_id }}
+  class="sgb-share-wrapper-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  <button
+    class="sgb-share-button-{{ ai_gen_id }}"
+    aria-label="Share this product"
+  >
+    <span class="sgb-share-icon-{{ ai_gen_id }}">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        <circle cx="18" cy="5" r="3"></circle>
+        <circle cx="6" cy="12" r="3"></circle>
+        <circle cx="18" cy="19" r="3"></circle>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+      </svg>
+    </span>
+    <span class="sgb-share-text-{{ ai_gen_id }}" data-original-text="{{ block.settings.share_text }}">
+      {{ block.settings.share_text }}
+    </span>
+    {% if block.settings.emoji_string != blank %}
+      <span class="sgb-share-emoji-{{ ai_gen_id }}">{{ block.settings.emoji_string }}</span>
+    {% endif %}
+  </button>
+</share-with-girlies-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class ShareWithGirlies{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+      }
+
+      connectedCallback() {
+        this.button = this.querySelector('.sgb-share-button-{{ ai_gen_id }}');
+        this.textElement = this.querySelector('.sgb-share-text-{{ ai_gen_id }}');
+        this.originalText = this.textElement.getAttribute('data-original-text');
+        
+        this.button.addEventListener('click', this.handleShare.bind(this));
+      }
+
+      async handleShare() {
+        const shareData = {
+          title: document.title,
+          url: window.location.href
+        };
+
+        if (navigator.share) {
+          try {
+            await navigator.share(shareData);
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              console.error('Share failed:', err);
+            }
+          }
+        } else {
+          this.fallbackCopyToClipboard(shareData.url);
+        }
+      }
+
+      fallbackCopyToClipboard(url) {
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+          document.execCommand('copy');
+          this.showCopiedFeedback();
+        } catch (err) {
+          console.error('Copy failed:', err);
+        }
+        
+        document.body.removeChild(textarea);
+      }
+
+      showCopiedFeedback() {
+        this.textElement.textContent = 'Link copied!';
+        
+        setTimeout(() => {
+          this.textElement.textContent = this.originalText;
+        }, 2000);
+      }
+    }
+
+    customElements.define('share-with-girlies-{{ ai_gen_id }}', ShareWithGirlies{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Share with girlies",
+  "settings": [
+    {
+      "type": "text",
+      "id": "share_text",
+      "label": "Share text",
+      "default": "Share with your girlies"
+    },
+    {
+      "type": "text",
+      "id": "emoji_string",
+      "label": "Emojis (after text)",
+      "default": "❤️❤️"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#c0392b"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#444444"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Font size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding left",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "unit": "px",
+      "label": "Letter spacing",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Share with girlies"
+    }
+  ]
+}
+{% endschema %}

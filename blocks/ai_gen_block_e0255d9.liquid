@@ -1,0 +1,801 @@
+{% doc %}
+  @prompt
+    Create a polished, responsive Shopify footer brand section inspired by the attached reference image. It should let the merchant customize the brand logo/image, brand name or image, tagline text, description text, and social media links for Instagram, Facebook, TikTok, Pinterest, YouTube, and X/Twitter. Include theme-editor settings for desktop and mobile logo sizing, text sizes, line heights, alignment, colors, social icon size, icon spacing, section top and bottom padding, content gap spacing, and responsive behavior. Match the reference with a clean white background, centered purple branding, an elegant beauty/skincare aesthetic, accessible labels, and optional show/hide controls for each content element and social network. Use the attached image as the visual reference: https://sidekick.shopify.ai/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsiZGF0YSI6MzUwODY0MTY3OSwicHVyIjoiYmxvYl9pZCJ9fQ==--b7df78847aecfdf2979ca8665e09e33ead381410/foter_with_text.PNG
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-footer-brand-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    background-color: {{ block.settings.background_color }};
+    padding: {{ block.settings.padding_top }}px 20px {{ block.settings.padding_bottom }}px;
+  }
+
+  .ai-footer-brand-container-{{ ai_gen_id }} {
+    max-width: {{ block.settings.max_width }}px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: {{ block.settings.alignment }};
+    gap: {{ block.settings.content_gap }}px;
+    text-align: {{ block.settings.alignment }};
+  }
+
+  .ai-footer-brand-logo-{{ ai_gen_id }} {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .ai-footer-brand-logo-{{ ai_gen_id }} img {
+    display: block;
+    width: {{ block.settings.logo_width_desktop }}px;
+    height: auto;
+    max-width: 100%;
+  }
+
+  .ai-footer-brand-name-{{ ai_gen_id }} {
+    margin: 0;
+    font-size: {{ block.settings.brand_name_size_desktop }}px;
+    line-height: {{ block.settings.brand_name_line_height }};
+    color: {{ block.settings.brand_name_color }};
+    font-weight: {{ block.settings.brand_name_weight }};
+  }
+
+  .ai-footer-brand-name-{{ ai_gen_id }} img {
+    display: block;
+    width: {{ block.settings.brand_name_image_width_desktop }}px;
+    height: auto;
+    max-width: 100%;
+  }
+
+  .ai-footer-brand-tagline-{{ ai_gen_id }} {
+    margin: 0;
+    font-size: {{ block.settings.tagline_size_desktop }}px;
+    line-height: {{ block.settings.tagline_line_height }};
+    color: {{ block.settings.tagline_color }};
+    font-weight: {{ block.settings.tagline_weight }};
+  }
+
+  .ai-footer-brand-description-{{ ai_gen_id }} {
+    margin: 0;
+    font-size: {{ block.settings.description_size_desktop }}px;
+    line-height: {{ block.settings.description_line_height }};
+    color: {{ block.settings.description_color }};
+    max-width: {{ block.settings.description_max_width }}px;
+  }
+
+  .ai-footer-brand-socials-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    justify-content: {{ block.settings.alignment }};
+    gap: {{ block.settings.social_icon_gap }}px;
+    flex-wrap: wrap;
+  }
+
+  .ai-footer-brand-social-link-{{ ai_gen_id }} {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: {{ block.settings.social_icon_size }}px;
+    height: {{ block.settings.social_icon_size }}px;
+    color: {{ block.settings.social_icon_color }};
+    transition: color 0.2s ease, transform 0.2s ease;
+    text-decoration: none;
+  }
+
+  .ai-footer-brand-social-link-{{ ai_gen_id }}:hover {
+    color: {{ block.settings.social_icon_hover_color }};
+    transform: translateY(-2px);
+  }
+
+  .ai-footer-brand-social-link-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-footer-brand-logo-{{ ai_gen_id }} img {
+      width: {{ block.settings.logo_width_mobile }}px;
+    }
+
+    .ai-footer-brand-name-{{ ai_gen_id }} {
+      font-size: {{ block.settings.brand_name_size_mobile }}px;
+    }
+
+    .ai-footer-brand-name-{{ ai_gen_id }} img {
+      width: {{ block.settings.brand_name_image_width_mobile }}px;
+    }
+
+    .ai-footer-brand-tagline-{{ ai_gen_id }} {
+      font-size: {{ block.settings.tagline_size_mobile }}px;
+    }
+
+    .ai-footer-brand-description-{{ ai_gen_id }} {
+      font-size: {{ block.settings.description_size_mobile }}px;
+    }
+  }
+{% endstyle %}
+
+<div class="ai-footer-brand-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-footer-brand-container-{{ ai_gen_id }}">
+    {% if block.settings.show_logo and block.settings.logo != blank %}
+      <div class="ai-footer-brand-logo-{{ ai_gen_id }}">
+        <img
+          src="{{ block.settings.logo | image_url: width: 600 }}"
+          alt="{{ block.settings.logo.alt | default: shop.name | escape }}"
+          width="{{ block.settings.logo.width }}"
+          height="{{ block.settings.logo.height }}"
+          loading="lazy"
+        >
+      </div>
+    {% endif %}
+
+    {% if block.settings.show_brand_name %}
+      <div class="ai-footer-brand-name-{{ ai_gen_id }}">
+        {% if block.settings.brand_name_image != blank %}
+          <img
+            src="{{ block.settings.brand_name_image | image_url: width: 600 }}"
+            alt="{{ block.settings.brand_name_image.alt | default: block.settings.brand_name_text | escape }}"
+            width="{{ block.settings.brand_name_image.width }}"
+            height="{{ block.settings.brand_name_image.height }}"
+            loading="lazy"
+          >
+        {% elsif block.settings.brand_name_text != blank %}
+          {{ block.settings.brand_name_text }}
+        {% else %}
+          {{ shop.name }}
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if block.settings.show_tagline and block.settings.tagline_text != blank %}
+      <p class="ai-footer-brand-tagline-{{ ai_gen_id }}">
+        {{ block.settings.tagline_text }}
+      </p>
+    {% endif %}
+
+    {% if block.settings.show_description and block.settings.description_text != blank %}
+      <div class="ai-footer-brand-description-{{ ai_gen_id }}">
+        {{ block.settings.description_text }}
+      </div>
+    {% endif %}
+
+    {% assign has_social_links = false %}
+    {% if block.settings.show_social_icons %}
+      {% if block.settings.show_instagram and block.settings.instagram_url != blank %}
+        {% assign has_social_links = true %}
+      {% endif %}
+      {% if block.settings.show_facebook and block.settings.facebook_url != blank %}
+        {% assign has_social_links = true %}
+      {% endif %}
+      {% if block.settings.show_tiktok and block.settings.tiktok_url != blank %}
+        {% assign has_social_links = true %}
+      {% endif %}
+      {% if block.settings.show_pinterest and block.settings.pinterest_url != blank %}
+        {% assign has_social_links = true %}
+      {% endif %}
+      {% if block.settings.show_youtube and block.settings.youtube_url != blank %}
+        {% assign has_social_links = true %}
+      {% endif %}
+      {% if block.settings.show_twitter and block.settings.twitter_url != blank %}
+        {% assign has_social_links = true %}
+      {% endif %}
+    {% endif %}
+
+    {% if has_social_links %}
+      <div class="ai-footer-brand-socials-{{ ai_gen_id }}">
+        {% if block.settings.show_instagram and block.settings.instagram_url != blank %}
+          <a
+            href="{{ block.settings.instagram_url }}"
+            class="ai-footer-brand-social-link-{{ ai_gen_id }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </a>
+        {% endif %}
+
+        {% if block.settings.show_facebook and block.settings.facebook_url != blank %}
+          <a
+            href="{{ block.settings.facebook_url }}"
+            class="ai-footer-brand-social-link-{{ ai_gen_id }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Facebook"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </a>
+        {% endif %}
+
+        {% if block.settings.show_tiktok and block.settings.tiktok_url != blank %}
+          <a
+            href="{{ block.settings.tiktok_url }}"
+            class="ai-footer-brand-social-link-{{ ai_gen_id }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="TikTok"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+            </svg>
+          </a>
+        {% endif %}
+
+        {% if block.settings.show_pinterest and block.settings.pinterest_url != blank %}
+          <a
+            href="{{ block.settings.pinterest_url }}"
+            class="ai-footer-brand-social-link-{{ ai_gen_id }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Pinterest"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 0c-6.627 0-12 5.372-12 12 0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+            </svg>
+          </a>
+        {% endif %}
+
+        {% if block.settings.show_youtube and block.settings.youtube_url != blank %}
+          <a
+            href="{{ block.settings.youtube_url }}"
+            class="ai-footer-brand-social-link-{{ ai_gen_id }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="YouTube"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+          </a>
+        {% endif %}
+
+        {% if block.settings.show_twitter and block.settings.twitter_url != blank %}
+          <a
+            href="{{ block.settings.twitter_url }}"
+            class="ai-footer-brand-social-link-{{ ai_gen_id }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="X (Twitter)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Footer brand",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Max width",
+      "min": 400,
+      "max": 1200,
+      "step": 50,
+      "unit": "px",
+      "default": 600
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "content_gap",
+      "label": "Content gap",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Logo"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_logo",
+      "label": "Show logo",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image"
+    },
+    {
+      "type": "range",
+      "id": "logo_width_desktop",
+      "label": "Desktop width",
+      "min": 40,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "default": 120
+    },
+    {
+      "type": "range",
+      "id": "logo_width_mobile",
+      "label": "Mobile width",
+      "min": 40,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Brand name"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_brand_name",
+      "label": "Show brand name",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "brand_name_text",
+      "label": "Brand name text"
+    },
+    {
+      "type": "image_picker",
+      "id": "brand_name_image",
+      "label": "Brand name image"
+    },
+    {
+      "type": "range",
+      "id": "brand_name_image_width_desktop",
+      "label": "Image desktop width",
+      "min": 60,
+      "max": 400,
+      "step": 10,
+      "unit": "px",
+      "default": 200
+    },
+    {
+      "type": "range",
+      "id": "brand_name_image_width_mobile",
+      "label": "Image mobile width",
+      "min": 60,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "default": 160
+    },
+    {
+      "type": "range",
+      "id": "brand_name_size_desktop",
+      "label": "Desktop size",
+      "min": 14,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "brand_name_size_mobile",
+      "label": "Mobile size",
+      "min": 14,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "brand_name_line_height",
+      "label": "Line height",
+      "options": [
+        {
+          "value": "1",
+          "label": "Tight"
+        },
+        {
+          "value": "1.2",
+          "label": "Normal"
+        },
+        {
+          "value": "1.5",
+          "label": "Loose"
+        }
+      ],
+      "default": "1.2"
+    },
+    {
+      "type": "select",
+      "id": "brand_name_weight",
+      "label": "Font weight",
+      "options": [
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semibold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        }
+      ],
+      "default": "600"
+    },
+    {
+      "type": "color",
+      "id": "brand_name_color",
+      "label": "Color",
+      "default": "#7b5ea7"
+    },
+    {
+      "type": "header",
+      "content": "Tagline"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tagline",
+      "label": "Show tagline",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "tagline_text",
+      "label": "Tagline text",
+      "default": "Beauty from nature"
+    },
+    {
+      "type": "range",
+      "id": "tagline_size_desktop",
+      "label": "Desktop size",
+      "min": 12,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "tagline_size_mobile",
+      "label": "Mobile size",
+      "min": 12,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "select",
+      "id": "tagline_line_height",
+      "label": "Line height",
+      "options": [
+        {
+          "value": "1",
+          "label": "Tight"
+        },
+        {
+          "value": "1.4",
+          "label": "Normal"
+        },
+        {
+          "value": "1.6",
+          "label": "Loose"
+        }
+      ],
+      "default": "1.4"
+    },
+    {
+      "type": "select",
+      "id": "tagline_weight",
+      "label": "Font weight",
+      "options": [
+        {
+          "value": "300",
+          "label": "Light"
+        },
+        {
+          "value": "400",
+          "label": "Normal"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "color",
+      "id": "tagline_color",
+      "label": "Color",
+      "default": "#7b5ea7"
+    },
+    {
+      "type": "header",
+      "content": "Description"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show description",
+      "default": true
+    },
+    {
+      "type": "richtext",
+      "id": "description_text",
+      "label": "Description text",
+      "default": "<p>Discover premium skincare crafted with natural ingredients for radiant, healthy skin.</p>"
+    },
+    {
+      "type": "range",
+      "id": "description_max_width",
+      "label": "Max width",
+      "min": 300,
+      "max": 800,
+      "step": 50,
+      "unit": "px",
+      "default": 500
+    },
+    {
+      "type": "range",
+      "id": "description_size_desktop",
+      "label": "Desktop size",
+      "min": 12,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "description_size_mobile",
+      "label": "Mobile size",
+      "min": 12,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "select",
+      "id": "description_line_height",
+      "label": "Line height",
+      "options": [
+        {
+          "value": "1.4",
+          "label": "Tight"
+        },
+        {
+          "value": "1.6",
+          "label": "Normal"
+        },
+        {
+          "value": "1.8",
+          "label": "Loose"
+        }
+      ],
+      "default": "1.6"
+    },
+    {
+      "type": "color",
+      "id": "description_color",
+      "label": "Color",
+      "default": "#1a1a2e"
+    },
+    {
+      "type": "header",
+      "content": "Social icons"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social_icons",
+      "label": "Show social icons",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "social_icon_size",
+      "label": "Icon size",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "social_icon_gap",
+      "label": "Icon spacing",
+      "min": 8,
+      "max": 32,
+      "step": 4,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "social_icon_color",
+      "label": "Icon color",
+      "default": "#7b5ea7"
+    },
+    {
+      "type": "color",
+      "id": "social_icon_hover_color",
+      "label": "Icon hover color",
+      "default": "#5b3f8c"
+    },
+    {
+      "type": "header",
+      "content": "Instagram"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_instagram",
+      "label": "Show Instagram",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "instagram_url",
+      "label": "Instagram URL"
+    },
+    {
+      "type": "header",
+      "content": "Facebook"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_facebook",
+      "label": "Show Facebook",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "facebook_url",
+      "label": "Facebook URL"
+    },
+    {
+      "type": "header",
+      "content": "TikTok"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tiktok",
+      "label": "Show TikTok",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "tiktok_url",
+      "label": "TikTok URL"
+    },
+    {
+      "type": "header",
+      "content": "Pinterest"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pinterest",
+      "label": "Show Pinterest",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "pinterest_url",
+      "label": "Pinterest URL"
+    },
+    {
+      "type": "header",
+      "content": "YouTube"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_youtube",
+      "label": "Show YouTube",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "youtube_url",
+      "label": "YouTube URL"
+    },
+    {
+      "type": "header",
+      "content": "X (Twitter)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_twitter",
+      "label": "Show X",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "twitter_url",
+      "label": "X URL"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Footer brand"
+    }
+  ]
+}
+{% endschema %}

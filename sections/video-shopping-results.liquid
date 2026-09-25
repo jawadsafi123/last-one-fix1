@@ -1,0 +1,1215 @@
+{% doc %}
+  Video Results (Shoppable Video Carousel) — Aslam Beauty
+  --------------------------------------------------------
+  Self-contained Online Store 2.0 section. Does not depend on any other
+  section, snippet, JS module or asset file in the theme — safe to paste
+  into a brand-new file and use immediately.
+
+  - Unlimited "Video Result" blocks (Add block → Video Result)
+  - Each block: Shopify-hosted video OR Instagram post OR TikTok post,
+    each tied to its own product
+  - Fully responsive horizontal carousel, independent desktop/mobile
+    settings for card width, gaps, padding and arrow visibility
+  - Lazy-loads video sources on scroll-into-view for performance
+
+  Why Instagram/TikTok render as a linked "poster + play" card instead of
+  a live embed: both platforms only ship *fixed-width* embed widgets
+  (roughly 326–540px) that cannot be resized to match a custom card width
+  without visibly breaking their own layout, and they require loading an
+  extra third-party script per platform. That fails the "configurable
+  card width for every video source" and "no unnecessary external
+  scripts" requirements at the same time. A branded poster card that
+  opens the original post in a new tab is 100% reliable, matches any
+  card width, costs nothing in extra JS, and can never produce a broken
+  iframe. If real inline embeds are ever wanted later, swap the markup
+  inside the `social` branch below for the official embed.js widgets.
+{% enddoc %}
+
+{% liquid
+  assign ratio = '9 / 16'
+  case section.settings.aspect_ratio
+    when 'square'
+      assign ratio = '1 / 1'
+    when 'landscape'
+      assign ratio = '16 / 9'
+  endcase
+
+  assign heading_align = section.settings.heading_alignment
+  assign content_align = section.settings.content_alignment
+  assign show_desktop_arrows = section.settings.show_arrows_desktop
+  assign show_mobile_arrows = section.settings.show_arrows_mobile
+  assign show_any_arrows = false
+  if show_desktop_arrows or show_mobile_arrows
+    assign show_any_arrows = true
+  endif
+%}
+
+<div
+  class="avc-root"
+  id="avc-{{ section.id }}"
+  style="
+    --avc-bg: {{ section.settings.background_color }};
+    --avc-heading-color: {{ section.settings.heading_color }};
+    --avc-card-bg: {{ section.settings.card_background_color }};
+    --avc-card-text: {{ section.settings.card_text_color }};
+    --avc-price: {{ section.settings.price_color }};
+    --avc-compare-price: {{ section.settings.compare_price_color }};
+    --avc-btn-bg: {{ section.settings.button_background_color }};
+    --avc-btn-text: {{ section.settings.button_text_color }};
+    --avc-btn-border: {{ section.settings.button_border_color }};
+    --avc-btn-radius: {{ section.settings.button_radius }}px;
+    --avc-card-radius: {{ section.settings.card_radius }}px;
+    --avc-ratio: {{ ratio }};
+    --avc-card-w-mobile: {{ section.settings.mobile_card_width }}px;
+    --avc-card-w-desktop: {{ section.settings.desktop_card_width }}px;
+    --avc-pt-mobile: {{ section.settings.mobile_padding_top }}px;
+    --avc-pb-mobile: {{ section.settings.mobile_padding_bottom }}px;
+    --avc-pt-desktop: {{ section.settings.desktop_padding_top }}px;
+    --avc-pb-desktop: {{ section.settings.desktop_padding_bottom }}px;
+    --avc-gap-mobile: {{ section.settings.mobile_card_gap }}px;
+    --avc-gap-desktop: {{ section.settings.desktop_card_gap }}px;
+    --avc-hgap-mobile: {{ section.settings.mobile_heading_gap }}px;
+    --avc-hgap-desktop: {{ section.settings.desktop_heading_gap }}px;
+  "
+>
+  <div class="avc-outer{% if section.settings.section_width == 'page-width' %} avc-outer--page-width{% else %} avc-outer--full-width{% endif %}">
+    {% if section.settings.heading != blank or section.settings.subheading != blank %}
+      <div class="avc-header avc-header--{{ heading_align }}">
+        {% if section.settings.heading != blank %}
+          <h2 class="avc-heading">{{ section.settings.heading | escape }}</h2>
+        {% endif %}
+        {% if section.settings.subheading != blank %}
+          <p class="avc-subheading">{{ section.settings.subheading | escape }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if section.blocks.size > 0 %}
+      <avc-carousel class="avc-carousel">
+        {% if show_any_arrows %}
+          <button
+            type="button"
+            class="avc-arrow avc-arrow--prev{% unless show_desktop_arrows %} avc-arrow--no-desktop{% endunless %}{% unless show_mobile_arrows %} avc-arrow--no-mobile{% endunless %}"
+            data-avc-prev
+            aria-label="Show previous videos"
+            hidden
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true" focusable="false">
+              <path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        {% endif %}
+
+        <ul class="avc-track" data-avc-track role="list" tabindex="-1">
+          {% for block in section.blocks %}
+            {% liquid
+              assign source = block.settings.video_source
+              assign product = block.settings.product
+              assign has_valid_social = false
+
+              if source == 'instagram' and block.settings.instagram_url contains 'instagram.com'
+                assign has_valid_social = true
+              endif
+
+              if source == 'tiktok' and block.settings.tiktok_url contains 'tiktok.com'
+                assign has_valid_social = true
+              endif
+
+              assign autoplay = block.settings.autoplay
+              assign muted = block.settings.muted
+              if autoplay
+                assign muted = true
+              endif
+            %}
+
+            <li
+              class="avc-card"
+              {{ block.shopify_attributes }}
+              data-avc-card
+            >
+              <div class="avc-media">
+                {% case source %}
+                  {% when 'shopify' %}
+                    {% if block.settings.shopify_video != blank %}
+                      {% liquid
+                        assign video = block.settings.shopify_video
+                        assign poster_image = block.settings.video_poster | default: video.preview_image
+                      %}
+                      <div class="avc-video-wrap" data-avc-video-wrap>
+                        <video
+                          data-avc-lazy
+                          {% if autoplay %}data-autoplay{% endif %}
+                          {% if block.settings.loop %}loop{% endif %}
+                          {% if muted %}muted{% endif %}
+                          {% if block.settings.show_controls %}controls{% endif %}
+                          playsinline
+                          preload="none"
+                          {% if poster_image != blank %}
+                            poster="{{ poster_image | image_url: width: 700 }}"
+                          {% endif %}
+                          aria-label="{{ product.title | default: 'Product video' | escape }}"
+                        >
+                          {% for video_source_file in video.sources %}
+                            <source data-src="{{ video_source_file.url }}" type="{{ video_source_file.mime_type }}">
+                          {% endfor %}
+                        </video>
+                      </div>
+                    {% elsif product.featured_image != blank %}
+                      <div class="avc-fallback-image">
+                        {{
+                          product.featured_image
+                          | image_url: width: 700
+                          | image_tag: loading: 'lazy', sizes: '(min-width: 750px) 320px, 220px', alt: product.featured_image.alt | default: product.title
+                        }}
+                      </div>
+                    {% else %}
+                      <div class="avc-placeholder" aria-hidden="true">{{ 'image' | placeholder_svg_tag: 'avc-placeholder-svg' }}</div>
+                    {% endif %}
+
+                  {% when 'instagram', 'tiktok' %}
+                    {% liquid
+                      assign social_url = block.settings.instagram_url
+                      if source == 'tiktok'
+                        assign social_url = block.settings.tiktok_url
+                      endif
+                      assign platform_label = 'Instagram'
+                      if source == 'tiktok'
+                        assign platform_label = 'TikTok'
+                      endif
+                    %}
+
+                    {% if has_valid_social %}
+                      <a
+                        class="avc-social-link"
+                        href="{{ social_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Watch on {{ platform_label }} (opens in a new tab)"
+                      >
+                        {% if block.settings.social_poster_image != blank %}
+                          {{
+                            block.settings.social_poster_image
+                            | image_url: width: 700
+                            | image_tag: loading: 'lazy', sizes: '(min-width: 750px) 320px, 220px', alt: block.settings.social_poster_image.alt | default: platform_label
+                          }}
+                        {% elsif product.featured_image != blank %}
+                          {{
+                            product.featured_image
+                            | image_url: width: 700
+                            | image_tag: loading: 'lazy', sizes: '(min-width: 750px) 320px, 220px', alt: product.featured_image.alt | default: product.title
+                          }}
+                        {% else %}
+                          <span class="avc-social-fallback">{{ platform_label }}</span>
+                        {% endif %}
+
+                        <span class="avc-play-badge" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </span>
+                        <span class="avc-social-tag">{{ platform_label }}</span>
+                      </a>
+                    {% else %}
+                      <div class="avc-placeholder" aria-hidden="true">
+                        <span class="avc-social-fallback">{{ platform_label }}</span>
+                      </div>
+                    {% endif %}
+                {% endcase %}
+              </div>
+
+              {% if block.settings.show_product_image or block.settings.show_product_title or block.settings.show_price or block.settings.show_button %}
+                <div class="avc-info avc-info--{{ content_align }}">
+                  {% if block.settings.show_product_image and product != blank and product.featured_image != blank %}
+                    <a href="{{ product.url }}" class="avc-info-thumb" aria-hidden="true" tabindex="-1">
+                      {{
+                        product.featured_image
+                        | image_url: width: 120
+                        | image_tag: loading: 'lazy', width: 44, height: 44, alt: ''
+                      }}
+                    </a>
+                  {% endif %}
+
+                  <div class="avc-info-text">
+                    {% if block.settings.show_product_title and product != blank %}
+                      <a href="{{ product.url }}" class="avc-info-title">{{ product.title | escape }}</a>
+                    {% endif %}
+
+                    {% if block.settings.show_price and product != blank %}
+                      <span class="avc-info-price">
+                        <span class="avc-price">{{ product.price | money }}</span>
+                        {% if product.compare_at_price > product.price %}
+                          <span class="avc-compare-price">{{ product.compare_at_price | money }}</span>
+                        {% endif %}
+                      </span>
+                    {% endif %}
+                  </div>
+
+                  {% if block.settings.show_button and product != blank %}
+                    <a href="{{ product.url }}" class="avc-button avc-button--{{ section.settings.button_style }} avc-button--{{ section.settings.button_size }}">
+                      {{ block.settings.button_text | default: 'Shop Now' | escape }}
+                    </a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+
+        {% if show_any_arrows %}
+          <button
+            type="button"
+            class="avc-arrow avc-arrow--next{% unless show_desktop_arrows %} avc-arrow--no-desktop{% endunless %}{% unless show_mobile_arrows %} avc-arrow--no-mobile{% endunless %}"
+            data-avc-next
+            aria-label="Show more videos"
+            hidden
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true" focusable="false">
+              <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        {% endif %}
+      </avc-carousel>
+    {% else %}
+      <div class="avc-empty">
+        Add a &ldquo;Video Result&rdquo; block to get started.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .avc-root,
+  .avc-root *,
+  .avc-root *::before,
+  .avc-root *::after {
+    box-sizing: border-box;
+  }
+
+  .avc-root {
+    background-color: var(--avc-bg);
+    overflow: hidden;
+  }
+
+  .avc-outer {
+    max-width: 100%;
+    padding-top: var(--avc-pt-mobile);
+    padding-bottom: var(--avc-pb-mobile);
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .avc-outer--page-width {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media screen and (min-width: 750px) {
+    .avc-outer {
+      padding-top: var(--avc-pt-desktop);
+      padding-bottom: var(--avc-pb-desktop);
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  .avc-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: var(--avc-hgap-mobile);
+  }
+
+  @media screen and (min-width: 750px) {
+    .avc-header {
+      margin-bottom: var(--avc-hgap-desktop);
+    }
+  }
+
+  .avc-header--center {
+    align-items: center;
+    text-align: center;
+  }
+
+  .avc-header--right {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .avc-heading {
+    color: var(--avc-heading-color);
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
+    line-height: 1.15;
+    margin: 0;
+  }
+
+  .avc-subheading {
+    color: var(--avc-heading-color);
+    opacity: 0.72;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 46rem;
+  }
+
+  .avc-carousel {
+    position: relative;
+    display: block;
+  }
+
+  .avc-track {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--avc-gap-mobile);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0.5rem;
+    scrollbar-width: none;
+  }
+
+  .avc-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .avc-track:focus-visible {
+    outline: 2px solid var(--avc-btn-bg);
+    outline-offset: 4px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .avc-track {
+      gap: var(--avc-gap-desktop);
+    }
+  }
+
+  .avc-card {
+    flex: 0 0 auto;
+    width: var(--avc-card-w-mobile);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .avc-card {
+      width: var(--avc-card-w-desktop);
+    }
+  }
+
+  .avc-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--avc-ratio);
+    border-radius: var(--avc-card-radius);
+    overflow: hidden;
+    background-color: var(--avc-card-bg);
+  }
+
+  .avc-video-wrap,
+  .avc-video-wrap video {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .avc-video-wrap video {
+    object-fit: {{ section.settings.video_fit }};
+  }
+
+  .avc-fallback-image,
+  .avc-fallback-image img,
+  .avc-social-link img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: {{ section.settings.video_fit }};
+  }
+
+  .avc-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .avc-placeholder-svg {
+    width: 40%;
+    height: 40%;
+    opacity: 0.35;
+  }
+
+  .avc-social-link {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .avc-social-fallback {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--avc-card-text);
+    opacity: 0.6;
+  }
+
+  .avc-play-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.92);
+    color: var(--avc-btn-bg, #1a1a2e);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  }
+
+  .avc-social-tag {
+    position: absolute;
+    top: 0.65rem;
+    left: 0.65rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background-color: rgba(26, 26, 46, 0.55);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .avc-info {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--avc-card-text);
+  }
+
+  .avc-info--center {
+    justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
+  }
+
+  .avc-info-thumb {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: calc(var(--avc-card-radius) * 0.4);
+    overflow: hidden;
+    display: block;
+  }
+
+  .avc-info-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avc-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .avc-info--center .avc-info-text {
+    flex: 0 1 auto;
+  }
+
+  .avc-info-title {
+    color: var(--avc-card-text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .avc-info-title:hover {
+    text-decoration: underline;
+  }
+
+  .avc-info-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+  }
+
+  .avc-price {
+    color: var(--avc-price);
+    font-weight: 600;
+  }
+
+  .avc-compare-price {
+    color: var(--avc-compare-price);
+    text-decoration: line-through;
+    font-size: 0.8rem;
+  }
+
+  .avc-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: var(--avc-btn-radius);
+    border: 1px solid var(--avc-btn-border);
+    background-color: var(--avc-btn-bg);
+    color: var(--avc-btn-text);
+    transition: opacity 0.15s ease;
+  }
+
+  .avc-button:hover {
+    opacity: 0.85;
+  }
+
+  .avc-button:focus-visible {
+    outline: 2px solid var(--avc-btn-bg);
+    outline-offset: 2px;
+  }
+
+  .avc-button--outline {
+    background-color: transparent;
+    color: var(--avc-btn-bg);
+  }
+
+  .avc-button--small {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.75rem;
+  }
+
+  .avc-button--medium {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.8125rem;
+  }
+
+  .avc-button--large {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.875rem;
+  }
+
+  .avc-arrow {
+    display: none;
+    position: absolute;
+    top: 0;
+    bottom: 2.25rem;
+    margin: auto 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(26, 26, 46, 0.12);
+    background-color: #fff;
+    color: var(--avc-heading-color);
+    box-shadow: 0 6px 18px rgba(26, 26, 46, 0.12);
+    cursor: pointer;
+    z-index: 2;
+    padding: 0;
+  }
+
+  .avc-arrow[hidden] {
+    display: none !important;
+  }
+
+  .avc-arrow--prev {
+    left: -0.5rem;
+  }
+
+  .avc-arrow--next {
+    right: -0.5rem;
+  }
+
+  .avc-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .avc-arrow--no-mobile {
+    display: none;
+  }
+
+  @media screen and (min-width: 750px) {
+    .avc-arrow--no-desktop {
+      display: none !important;
+    }
+
+    .avc-arrow:not([hidden]):not(.avc-arrow--no-desktop) {
+      display: flex;
+    }
+
+    .avc-arrow--prev {
+      left: -1.25rem;
+    }
+
+    .avc-arrow--next {
+      right: -1.25rem;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .avc-arrow:not([hidden]):not(.avc-arrow--no-mobile) {
+      display: flex;
+    }
+  }
+
+  .avc-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--avc-heading-color);
+    opacity: 0.6;
+    font-size: 0.9375rem;
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('avc-carousel')) {
+    class AvcCarousel extends HTMLElement {
+      connectedCallback() {
+        this.track = this.querySelector('[data-avc-track]');
+        this.prevButton = this.querySelector('[data-avc-prev]');
+        this.nextButton = this.querySelector('[data-avc-next]');
+
+        if (!this.track) return;
+
+        this._onScroll = this._updateArrows.bind(this);
+        this._onResize = this._updateArrows.bind(this);
+
+        this.track.addEventListener('scroll', this._onScroll, { passive: true });
+        window.addEventListener('resize', this._onResize);
+
+        if (this.prevButton) {
+          this.prevButton.addEventListener('click', () => this._scrollByCard(-1));
+        }
+
+        if (this.nextButton) {
+          this.nextButton.addEventListener('click', () => this._scrollByCard(1));
+        }
+
+        this._setupLazyMedia();
+
+        requestAnimationFrame(() => this._updateArrows());
+      }
+
+      disconnectedCallback() {
+        if (this.track) {
+          this.track.removeEventListener('scroll', this._onScroll);
+        }
+        window.removeEventListener('resize', this._onResize);
+        if (this._observer) this._observer.disconnect();
+      }
+
+      _scrollByCard(direction) {
+        const card = this.track.querySelector('[data-avc-card]');
+        const step = card ? card.getBoundingClientRect().width + 16 : this.track.clientWidth * 0.8;
+        this.track.scrollBy({ left: step * direction, behavior: 'smooth' });
+      }
+
+      _updateArrows() {
+        if (!this.track) return;
+
+        const hasOverflow = this.track.scrollWidth > this.track.clientWidth + 2;
+        const atStart = this.track.scrollLeft <= 2;
+        const atEnd = this.track.scrollLeft + this.track.clientWidth >= this.track.scrollWidth - 2;
+
+        if (this.prevButton) {
+          this.prevButton.hidden = !hasOverflow;
+          this.prevButton.disabled = atStart;
+        }
+
+        if (this.nextButton) {
+          this.nextButton.hidden = !hasOverflow;
+          this.nextButton.disabled = atEnd;
+        }
+      }
+
+      _setupLazyMedia() {
+        const videos = this.querySelectorAll('video[data-avc-lazy]');
+        if (!videos.length) return;
+
+        if (!('IntersectionObserver' in window)) {
+          videos.forEach((video) => this._activateVideo(video));
+          return;
+        }
+
+        this._observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                this._activateVideo(entry.target);
+                this._observer.unobserve(entry.target);
+              }
+            });
+          },
+          { rootMargin: '200px' }
+        );
+
+        videos.forEach((video) => this._observer.observe(video));
+      }
+
+      _activateVideo(video) {
+        if (video.dataset.avcLoaded === 'true') return;
+
+        const sources = video.querySelectorAll('source[data-src]');
+        sources.forEach((source) => {
+          source.setAttribute('src', source.getAttribute('data-src'));
+          source.removeAttribute('data-src');
+        });
+
+        video.dataset.avcLoaded = 'true';
+        video.load();
+
+        if (video.hasAttribute('data-autoplay')) {
+          const playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {
+              /* Autoplay was blocked by the browser; the poster image remains visible. */
+            });
+          }
+        }
+      }
+    }
+
+    customElements.define('avc-carousel', AvcCarousel);
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Video Results",
+  "tag": "section",
+  "class": "section-video-results",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    { "type": "header", "content": "Content" },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Shop The Look"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "center"
+    },
+    { "type": "header", "content": "Layout" },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Section width",
+      "options": [
+        { "value": "page-width", "label": "Page width" },
+        { "value": "full-width", "label": "Full width" }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Product content alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" }
+      ],
+      "default": "left"
+    },
+    { "type": "header", "content": "Video" },
+    {
+      "type": "select",
+      "id": "aspect_ratio",
+      "label": "Video aspect ratio",
+      "options": [
+        { "value": "portrait", "label": "Portrait (9:16)" },
+        { "value": "square", "label": "Square (1:1)" },
+        { "value": "landscape", "label": "Landscape (16:9)" }
+      ],
+      "default": "portrait"
+    },
+    {
+      "type": "select",
+      "id": "video_fit",
+      "label": "Video fit",
+      "options": [
+        { "value": "cover", "label": "Cover" },
+        { "value": "contain", "label": "Contain" }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "label": "Card corner radius",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    { "type": "header", "content": "Card width" },
+    {
+      "type": "range",
+      "id": "desktop_card_width",
+      "label": "Desktop card width",
+      "min": 200,
+      "max": 480,
+      "step": 10,
+      "unit": "px",
+      "default": 300
+    },
+    {
+      "type": "range",
+      "id": "mobile_card_width",
+      "label": "Mobile card width",
+      "min": 140,
+      "max": 320,
+      "step": 10,
+      "unit": "px",
+      "default": 220
+    },
+    { "type": "header", "content": "Spacing — desktop" },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 56
+    },
+    {
+      "type": "range",
+      "id": "desktop_card_gap",
+      "label": "Gap between cards",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "desktop_heading_gap",
+      "label": "Heading to carousel spacing",
+      "min": 0,
+      "max": 64,
+      "step": 4,
+      "unit": "px",
+      "default": 32
+    },
+    { "type": "header", "content": "Spacing — mobile" },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "mobile_card_gap",
+      "label": "Gap between cards",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "mobile_heading_gap",
+      "label": "Heading to carousel spacing",
+      "min": 0,
+      "max": 48,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    { "type": "header", "content": "Navigation arrows" },
+    {
+      "type": "checkbox",
+      "id": "show_arrows_desktop",
+      "label": "Show arrows on desktop",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows_mobile",
+      "label": "Show arrows on mobile",
+      "default": false
+    },
+    { "type": "header", "content": "Colors" },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section background",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#1A1A2E"
+    },
+    {
+      "type": "color",
+      "id": "card_background_color",
+      "label": "Card / placeholder background",
+      "default": "#F5F0FB"
+    },
+    {
+      "type": "color",
+      "id": "card_text_color",
+      "label": "Product text color",
+      "default": "#1A1A2E"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Price color",
+      "default": "#5B3F8C"
+    },
+    {
+      "type": "color",
+      "id": "compare_price_color",
+      "label": "Compare-at price color",
+      "default": "#6B6B6B"
+    },
+    { "type": "header", "content": "Shop Now button" },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "Style",
+      "options": [
+        { "value": "solid", "label": "Solid" },
+        { "value": "outline", "label": "Outline" }
+      ],
+      "default": "solid"
+    },
+    {
+      "type": "select",
+      "id": "button_size",
+      "label": "Size",
+      "options": [
+        { "value": "small", "label": "Small" },
+        { "value": "medium", "label": "Medium" },
+        { "value": "large", "label": "Large" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "range",
+      "id": "button_radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Background",
+      "default": "#7B5EA7"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Text",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Border",
+      "default": "#7B5EA7"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "video_result",
+      "name": "Video Result",
+      "settings": [
+        { "type": "header", "content": "Video source" },
+        {
+          "type": "select",
+          "id": "video_source",
+          "label": "Source",
+          "options": [
+            { "value": "shopify", "label": "Shopify video" },
+            { "value": "instagram", "label": "Instagram" },
+            { "value": "tiktok", "label": "TikTok" }
+          ],
+          "default": "shopify"
+        },
+        {
+          "type": "video",
+          "id": "shopify_video",
+          "label": "Video",
+          "visible_if": "{{ block.settings.video_source == 'shopify' }}"
+        },
+        {
+          "type": "image_picker",
+          "id": "video_poster",
+          "label": "Cover image (shown before the video plays)",
+          "visible_if": "{{ block.settings.video_source == 'shopify' }}"
+        },
+        {
+          "type": "url",
+          "id": "instagram_url",
+          "label": "Instagram post/reel URL",
+          "visible_if": "{{ block.settings.video_source == 'instagram' }}"
+        },
+        {
+          "type": "url",
+          "id": "tiktok_url",
+          "label": "TikTok video URL",
+          "visible_if": "{{ block.settings.video_source == 'tiktok' }}"
+        },
+        {
+          "type": "image_picker",
+          "id": "social_poster_image",
+          "label": "Cover image",
+          "info": "Shown with a play button and links out to the original post. Falls back to the product image if left blank.",
+          "visible_if": "{{ block.settings.video_source == 'instagram' or block.settings.video_source == 'tiktok' }}"
+        },
+        { "type": "header", "content": "Playback (Shopify video only)" },
+        {
+          "type": "checkbox",
+          "id": "autoplay",
+          "label": "Autoplay",
+          "default": true,
+          "visible_if": "{{ block.settings.video_source == 'shopify' }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "loop",
+          "label": "Loop",
+          "default": true,
+          "visible_if": "{{ block.settings.video_source == 'shopify' }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "muted",
+          "label": "Muted",
+          "info": "Autoplay always plays muted — this is a browser requirement.",
+          "default": true,
+          "visible_if": "{{ block.settings.video_source == 'shopify' }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_controls",
+          "label": "Show playback controls",
+          "default": false,
+          "visible_if": "{{ block.settings.video_source == 'shopify' }}"
+        },
+        { "type": "header", "content": "Product" },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        },
+        { "type": "header", "content": "Product display" },
+        {
+          "type": "checkbox",
+          "id": "show_product_image",
+          "label": "Show product thumbnail",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_product_title",
+          "label": "Show product title",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_price",
+          "label": "Show price",
+          "default": true
+        },
+        { "type": "header", "content": "Shop Now button" },
+        {
+          "type": "checkbox",
+          "id": "show_button",
+          "label": "Show button",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Button text",
+          "default": "Shop Now"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video Results",
+      "blocks": [
+        { "type": "video_result" },
+        { "type": "video_result" },
+        { "type": "video_result" }
+      ]
+    }
+  ]
+}
+{% endschema %}

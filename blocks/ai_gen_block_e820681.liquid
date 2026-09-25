@@ -1,0 +1,251 @@
+{% doc %}
+  @prompt
+    Create a Shopify product page BLOCK called "Collection Feature Highlights". This block goes inside the main product section.
+    
+    CRITICAL — USE EXACTLY THIS LIQUID LOGIC WITH THESE EXACT METAFIELD KEYS:
+    
+    {% assign found_collection = blank %}
+    {% for col in product.collections %}
+      {% assign col_heading = col.metafields.custom.heading %}
+      {% if col_heading != blank and found_collection == blank %}
+        {% assign found_collection = col %}
+      {% endif %}
+    {% endfor %}
+    
+    {% if found_collection != blank %}
+      {% assign heading = found_collection.metafields.custom.heading.value %}
+      {% assign subtext = found_collection.metafields.custom.section_subtext.value %}
+      {% assign features = found_collection.metafields.custom.featur_list.value %}
+      ... render card ...
+    {% endif %}
+    METAFIELD KEYS ARE EXACTLY:
+    
+    Heading: namespace=custom, key=heading (NOT section_heading)
+    Subtext: namespace=custom, key=section_subtext
+    Feature list: namespace=custom, key=featur_list (NOT feature_list — note missing 'e')
+    feature list is type: list.single_line_text_field — loop it with for item in features
+    RENDER RULES:
+    
+    found_collection blank = render zero output, no div, no wrapper, nothing at all
+    subtext blank = skip silently, no gap
+    features blank or empty = skip list silently, no gap
+    every field in its own independent if check
+    LAYOUT — identical mobile and desktop:
+    
+    Single column, width 100% always, no grid, no flexbox direction change between breakpoints
+    No layout shift at any screen size
+    DESIGN (use block.settings):
+    
+    Card background: block.settings.background_color default #fdf6f3
+    Border: 1px solid block.settings.border_color default #f0e0d6, border-radius 12px, no shadow
+    Heading: block.settings.heading_color default #c0392b, font-weight 600, font-size clamp(1rem,2.5vw,1.25rem)
+    Subtext: block.settings.subtext_color default #666666, font-size 0.875rem, margin-top 6px
+    ul: list-style none, margin 0, padding 0
+    li: display flex, align-items flex-start, gap 10px, margin-bottom 10px
+    SVG icons inline stroke only, color #c0392b, 20x20, flex-shrink 0
+    Cycle 5 icons by forloop.index0 | modulo: 5 — shield, droplet, leaf, sparkle, map-pin
+    Internal card padding: 20px
+    SCHEMA SETTINGS:
+    
+    heading_color: color, label "Heading Color", default #c0392b
+    subtext_color: color, label "Subtext Color", default #666666
+    background_color: color, label "Card Background", default #fdf6f3
+    border_color: color, label "Border Color", default #f0e0d6
+    padding_top: range 0-60 step 4 default 20, label "Padding Top (px)"
+    padding_bottom: range 0-60 step 4 default 20, label "Padding Bottom (px)"
+    Zero JavaScript. Pure Liquid + CSS only. Prefix all CSS classes with cfh to avoid theme conflicts., its perfect keep it as it as just add that we can change the icon color too
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% assign found_collection = blank %}
+{% for col in product.collections %}
+  {% assign col_heading = col.metafields.custom.heading %}
+  {% if col_heading != blank and found_collection == blank %}
+    {% assign found_collection = col %}
+  {% endif %}
+{% endfor %}
+
+{% if found_collection != blank %}
+  {% assign heading = found_collection.metafields.custom.heading.value %}
+  {% assign subtext = found_collection.metafields.custom.section_subtext.value %}
+  {% assign features = found_collection.metafields.custom.featur_list.value %}
+
+  {% style %}
+    .cfh-wrapper-{{ ai_gen_id }} {
+      display: block;
+      width: 100%;
+      padding-top: {{ block.settings.padding_top }}px;
+      padding-bottom: {{ block.settings.padding_bottom }}px;
+    }
+
+    .cfh-card-{{ ai_gen_id }} {
+      background-color: {{ block.settings.background_color }};
+      border: 1px solid {{ block.settings.border_color }};
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .cfh-heading-{{ ai_gen_id }} {
+      color: {{ block.settings.heading_color }};
+      font-weight: 600;
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      margin: 0;
+    }
+
+    .cfh-subtext-{{ ai_gen_id }} {
+      color: {{ block.settings.subtext_color }};
+      font-size: 0.875rem;
+      margin: 6px 0 0;
+    }
+
+    .cfh-features-{{ ai_gen_id }} {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .cfh-features-{{ ai_gen_id }} li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .cfh-features-{{ ai_gen_id }} li:last-child {
+      margin-bottom: 0;
+    }
+
+    .cfh-icon-{{ ai_gen_id }} {
+      flex-shrink: 0;
+      color: {{ block.settings.icon_color }};
+      width: 20px;
+      height: 20px;
+    }
+
+    .cfh-feature-text-{{ ai_gen_id }} {
+      flex: 1;
+      color: {{ block.settings.subtext_color }};
+      font-size: 0.875rem;
+    }
+  {% endstyle %}
+
+  <div class="cfh-wrapper-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+    <div class="cfh-card-{{ ai_gen_id }}">
+      {% if heading != blank %}
+        <h3 class="cfh-heading-{{ ai_gen_id }}">{{ heading }}</h3>
+      {% endif %}
+
+      {% if subtext != blank %}
+        <p class="cfh-subtext-{{ ai_gen_id }}">{{ subtext }}</p>
+      {% endif %}
+
+      {% if features != blank and features.size > 0 %}
+        <ul class="cfh-features-{{ ai_gen_id }}">
+          {% for item in features %}
+            {% assign icon_index = forloop.index0 | modulo: 5 %}
+            <li>
+              <span class="cfh-icon-{{ ai_gen_id }}">
+                {% case icon_index %}
+                  {% when 0 %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                  {% when 1 %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                    </svg>
+                  {% when 2 %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                    </svg>
+                  {% when 3 %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                  {% when 4 %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                {% endcase %}
+              </span>
+              <span class="cfh-feature-text-{{ ai_gen_id }}">{{ item }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Collection highlights",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color",
+      "default": "#c0392b"
+    },
+    {
+      "type": "color",
+      "id": "subtext_color",
+      "label": "Subtext color",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#c0392b"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Card background",
+      "default": "#fdf6f3"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#f0e0d6"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collection highlights"
+    }
+  ]
+}
+{% endschema %}

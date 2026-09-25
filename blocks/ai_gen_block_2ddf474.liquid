@@ -1,0 +1,494 @@
+{% doc %}
+  @prompt
+    Create a premium static trust/features bar section for a beauty brand (Aslam Beauty) inspired by a reference image showing 4 icon+text columns separated by dividers. LAYOUT: Horizontal bar with 4 columns separated by subtle vertical dividers. Each column: icon on top, bold title below, short subtitle below that. Desktop: all 4 in one row with dividers. Mobile: 2x2 grid, no dividers, centered, fully responsive. CONTENT (editable in Theme Editor): Item 1: checkmark icon, "100% Authentic", "Original products". Item 2: wallet icon, "Cash on Delivery", "Pay when you receive". Item 3: truck icon, "Fast Shipping", "1–3 Business Days". Item 4: location pin icon, "Nationwide Delivery", "All over Pakistan". STYLE: Background soft gradient from #ede5f5 (light lavender) to #f5f0fb (near white) left to right. Icons: golden amber #f5a623, 32px, SVG inline outline style, no external libraries. Title: bold #1a1a2e, 15px, Inter. Subtitle: #6b6b6b, 13px, Inter. Dividers: 1px solid rgba(91,63,140,0.15). Section padding editable (default 20px). Optional border-radius toggle. THEME EDITOR SETTINGS: padding top/bottom, gradient start/end colors, icon color, show/hide dividers, each item has icon selector (checkmark, wallet, truck, location, star, shield, gift, clock, heart, leaf), editable title and subtitle. No external libraries. Lightweight, accessible, isolated.
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-trust-bar-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    background: linear-gradient(
+      to right,
+      {{ block.settings.gradient_start }},
+      {{ block.settings.gradient_end }}
+    );
+    padding: {{ block.settings.padding_top }}px 20px {{ block.settings.padding_bottom }}px;
+    {% if block.settings.enable_border_radius %}
+      border-radius: {{ block.settings.border_radius }}px;
+    {% endif %}
+  }
+
+  .ai-trust-bar__container-{{ ai_gen_id }} {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .ai-trust-bar__grid-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+
+  .ai-trust-bar__item-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px 20px;
+    position: relative;
+  }
+
+  .ai-trust-bar__item-{{ ai_gen_id }}:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: 1px;
+    background-color: {{ block.settings.divider_color }};
+    {% if block.settings.show_dividers == false %}
+      display: none;
+    {% endif %}
+  }
+
+  .ai-trust-bar__icon-{{ ai_gen_id }} {
+    width: {{ block.settings.icon_size }}px;
+    height: {{ block.settings.icon_size }}px;
+    margin-bottom: 12px;
+    color: {{ block.settings.icon_color }};
+  }
+
+  .ai-trust-bar__icon-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ai-trust-bar__title-{{ ai_gen_id }} {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: {{ block.settings.title_size }}px;
+    font-weight: 700;
+    color: {{ block.settings.title_color }};
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+
+  .ai-trust-bar__subtitle-{{ ai_gen_id }} {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: {{ block.settings.subtitle_size }}px;
+    font-weight: 400;
+    color: {{ block.settings.subtitle_color }};
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-trust-bar__grid-{{ ai_gen_id }} {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px 0;
+    }
+
+    .ai-trust-bar__item-{{ ai_gen_id }}:not(:last-child)::after {
+      display: none;
+    }
+
+    .ai-trust-bar__item-{{ ai_gen_id }} {
+      padding: 12px 16px;
+    }
+
+    .ai-trust-bar__icon-{{ ai_gen_id }} {
+      margin-bottom: 8px;
+    }
+  }
+{% endstyle %}
+
+<trust-bar-{{ ai_gen_id }} class="ai-trust-bar-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="ai-trust-bar__container-{{ ai_gen_id }}">
+    <div class="ai-trust-bar__grid-{{ ai_gen_id }}">
+      {% for i in (1..4) %}
+        {% liquid
+          assign item_enabled_key = 'item_' | append: i | append: '_enabled'
+          assign item_icon_key = 'item_' | append: i | append: '_icon'
+          assign item_title_key = 'item_' | append: i | append: '_title'
+          assign item_subtitle_key = 'item_' | append: i | append: '_subtitle'
+
+          assign item_enabled = block.settings[item_enabled_key]
+          assign item_icon = block.settings[item_icon_key]
+          assign item_title = block.settings[item_title_key]
+          assign item_subtitle = block.settings[item_subtitle_key]
+        %}
+
+        {% if item_enabled %}
+          <div class="ai-trust-bar__item-{{ ai_gen_id }}">
+            <div class="ai-trust-bar__icon-{{ ai_gen_id }}">
+              {% case item_icon %}
+                {% when 'checkmark' %}
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                {% when 'wallet' %}
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path>
+                  </svg>
+                {% when 'truck' %}
+                  <svg viewBox="0 0 24 24">
+                    <path d="M1 3h15v13H1z"></path>
+                    <path d="M16 8h4l3 3v5h-7V8z"></path>
+                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                  </svg>
+                {% when 'location' %}
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                {% when 'star' %}
+                  <svg viewBox="0 0 24 24">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                {% when 'shield' %}
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                {% when 'gift' %}
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                    <rect x="2" y="7" width="20" height="5"></rect>
+                    <line x1="12" y1="22" x2="12" y2="7"></line>
+                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                  </svg>
+                {% when 'clock' %}
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                {% when 'heart' %}
+                  <svg viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  </svg>
+                {% when 'leaf' %}
+                  <svg viewBox="0 0 24 24">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                  </svg>
+              {% endcase %}
+            </div>
+            <h3 class="ai-trust-bar__title-{{ ai_gen_id }}">{{ item_title }}</h3>
+            <p class="ai-trust-bar__subtitle-{{ ai_gen_id }}">{{ item_subtitle }}</p>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</trust-bar-{{ ai_gen_id }}>
+
+{% schema %}
+{
+  "name": "Trust bar",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_border_radius",
+      "label": "Enable border radius",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "color",
+      "id": "gradient_start",
+      "label": "Gradient start",
+      "default": "#ede5f5"
+    },
+    {
+      "type": "color",
+      "id": "gradient_end",
+      "label": "Gradient end",
+      "default": "#f5f0fb"
+    },
+    {
+      "type": "header",
+      "content": "Dividers"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_dividers",
+      "label": "Show dividers",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "divider_color",
+      "label": "Divider color",
+      "default": "rgba(91, 63, 140, 0.15)"
+    },
+    {
+      "type": "header",
+      "content": "Icons"
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "label": "Icon size",
+      "min": 20,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "default": 32
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#f5a623"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#1a1a2e"
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "label": "Subtitle size",
+      "min": 10,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "default": 13
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle color",
+      "default": "#6b6b6b"
+    },
+    {
+      "type": "header",
+      "content": "Item 1"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_1_enabled",
+      "label": "Enable item 1",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "item_1_icon",
+      "label": "Icon",
+      "options": [
+        { "value": "checkmark", "label": "Checkmark" },
+        { "value": "wallet", "label": "Wallet" },
+        { "value": "truck", "label": "Truck" },
+        { "value": "location", "label": "Location" },
+        { "value": "star", "label": "Star" },
+        { "value": "shield", "label": "Shield" },
+        { "value": "gift", "label": "Gift" },
+        { "value": "clock", "label": "Clock" },
+        { "value": "heart", "label": "Heart" },
+        { "value": "leaf", "label": "Leaf" }
+      ],
+      "default": "checkmark"
+    },
+    {
+      "type": "text",
+      "id": "item_1_title",
+      "label": "Title",
+      "default": "100% Authentic"
+    },
+    {
+      "type": "text",
+      "id": "item_1_subtitle",
+      "label": "Subtitle",
+      "default": "Original products"
+    },
+    {
+      "type": "header",
+      "content": "Item 2"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_2_enabled",
+      "label": "Enable item 2",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "item_2_icon",
+      "label": "Icon",
+      "options": [
+        { "value": "checkmark", "label": "Checkmark" },
+        { "value": "wallet", "label": "Wallet" },
+        { "value": "truck", "label": "Truck" },
+        { "value": "location", "label": "Location" },
+        { "value": "star", "label": "Star" },
+        { "value": "shield", "label": "Shield" },
+        { "value": "gift", "label": "Gift" },
+        { "value": "clock", "label": "Clock" },
+        { "value": "heart", "label": "Heart" },
+        { "value": "leaf", "label": "Leaf" }
+      ],
+      "default": "wallet"
+    },
+    {
+      "type": "text",
+      "id": "item_2_title",
+      "label": "Title",
+      "default": "Cash on Delivery"
+    },
+    {
+      "type": "text",
+      "id": "item_2_subtitle",
+      "label": "Subtitle",
+      "default": "Pay when you receive"
+    },
+    {
+      "type": "header",
+      "content": "Item 3"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_3_enabled",
+      "label": "Enable item 3",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "item_3_icon",
+      "label": "Icon",
+      "options": [
+        { "value": "checkmark", "label": "Checkmark" },
+        { "value": "wallet", "label": "Wallet" },
+        { "value": "truck", "label": "Truck" },
+        { "value": "location", "label": "Location" },
+        { "value": "star", "label": "Star" },
+        { "value": "shield", "label": "Shield" },
+        { "value": "gift", "label": "Gift" },
+        { "value": "clock", "label": "Clock" },
+        { "value": "heart", "label": "Heart" },
+        { "value": "leaf", "label": "Leaf" }
+      ],
+      "default": "truck"
+    },
+    {
+      "type": "text",
+      "id": "item_3_title",
+      "label": "Title",
+      "default": "Fast Shipping"
+    },
+    {
+      "type": "text",
+      "id": "item_3_subtitle",
+      "label": "Subtitle",
+      "default": "1–3 Business Days"
+    },
+    {
+      "type": "header",
+      "content": "Item 4"
+    },
+    {
+      "type": "checkbox",
+      "id": "item_4_enabled",
+      "label": "Enable item 4",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "item_4_icon",
+      "label": "Icon",
+      "options": [
+        { "value": "checkmark", "label": "Checkmark" },
+        { "value": "wallet", "label": "Wallet" },
+        { "value": "truck", "label": "Truck" },
+        { "value": "location", "label": "Location" },
+        { "value": "star", "label": "Star" },
+        { "value": "shield", "label": "Shield" },
+        { "value": "gift", "label": "Gift" },
+        { "value": "clock", "label": "Clock" },
+        { "value": "heart", "label": "Heart" },
+        { "value": "leaf", "label": "Leaf" }
+      ],
+      "default": "location"
+    },
+    {
+      "type": "text",
+      "id": "item_4_title",
+      "label": "Title",
+      "default": "Nationwide Delivery"
+    },
+    {
+      "type": "text",
+      "id": "item_4_subtitle",
+      "label": "Subtitle",
+      "default": "All over Pakistan"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust bar"
+    }
+  ]
+}
+{% endschema %}

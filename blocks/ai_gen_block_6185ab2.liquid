@@ -1,0 +1,744 @@
+{% doc %}
+  @prompt
+    Create a new **Order Progress Timeline** Shopify section from scratch based on the attached reference.
+    
+    * 3 stages: **Order Placed → Shipped → Delivered**
+    * Each stage has an editable icon, title, and small manual text underneath, e.g. **Day 1, Day 2, Day 3**.
+    * No automatic Shopify dates, order data, tracking, or delivery data.
+    * Add a smooth ship/truck animation that travels from Stage 1 to Stage 3.
+    * The line starts unfilled and progressively fills behind the moving ship.
+    * Animation starts when the section enters the viewport and smoothly resets/replays when it leaves and re-enters.
+    * Must be **horizontal on both desktop and mobile**, fully responsive, with no overflow.
+    * Add Theme Editor controls for titles, custom text, icons, colors, line thickness, ship size, animation speed, spacing, padding, and background.
+    * Use the existing Aslam Beauty brand/theme styling automatically.
+    * Keep it minimal, premium, lightweight, and smooth.
+    * Use scoped CSS + lightweight vanilla JS with IntersectionObserver. No external libraries.
+    * Respect `prefers-reduced-motion` and do not affect any other theme functionality.
+    * Include valid Shopify Liquid, schema, CSS, and JS. Build the complete production-ready section.
+    , keep everthing else as it as Fix two things in the current Order Progress Timeline:
+    
+    1. **Bubble alignment:** The connecting line must pass exactly through the **vertical center of all three bubbles**. The first bubble is already correct, but the 2nd and 3rd bubbles are slightly below the line. Correct their alignment on both desktop and mobile so all three are perfectly centered on the same horizontal line.
+    
+    2. **Ship + bubble progress:** Synchronize the moving ship/truck with the progress animation. As the ship reaches each bubble, that bubble should progressively fill/change to the completed state. The line should also fill behind the ship at the same time.
+    
+    Keep everything else exactly as it is. Do not change the design, spacing, text, or existing functionality.
+    
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-order-timeline-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    background-color: {{ block.settings.background_color }};
+    padding: {{ block.settings.padding_top }}px {{ block.settings.padding_horizontal }}px {{ block.settings.padding_bottom }}px;
+  }
+
+  .ai-order-timeline-container-{{ ai_gen_id }} {
+    max-width: {{ block.settings.max_width }}px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .ai-order-timeline-stages-{{ ai_gen_id }} {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    gap: {{ block.settings.stage_spacing }}px;
+  }
+
+  .ai-order-timeline-line-wrapper-{{ ai_gen_id }} {
+    position: absolute;
+    top: {{ block.settings.icon_size | divided_by: 2 }}px;
+    left: {{ block.settings.icon_size | divided_by: 2 }}px;
+    right: {{ block.settings.icon_size | divided_by: 2 }}px;
+    height: {{ block.settings.line_thickness }}px;
+    z-index: 1;
+    transform: translateY(calc(-1 * {{ block.settings.line_thickness }}px / 2));
+  }
+
+  .ai-order-timeline-line-bg-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: {{ block.settings.line_unfilled_color }};
+    border-radius: {{ block.settings.line_thickness | divided_by: 2 }}px;
+  }
+
+  .ai-order-timeline-line-progress-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background-color: {{ block.settings.line_filled_color }};
+    border-radius: {{ block.settings.line_thickness | divided_by: 2 }}px;
+    transition: width {{ block.settings.animation_duration }}s ease-in-out;
+  }
+
+  .ai-order-timeline-ship-{{ ai_gen_id }} {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(-50%, -50%);
+    width: {{ block.settings.ship_size }}px;
+    height: {{ block.settings.ship_size }}px;
+    z-index: 2;
+    transition: left {{ block.settings.animation_duration }}s ease-in-out;
+    color: {{ block.settings.ship_color }};
+  }
+
+  .ai-order-timeline-ship-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  }
+
+  .ai-order-timeline-stage-{{ ai_gen_id }} {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: {{ block.settings.text_spacing }}px;
+    flex: 1;
+    position: relative;
+    z-index: 3;
+  }
+
+  .ai-order-timeline-icon-{{ ai_gen_id }} {
+    width: {{ block.settings.icon_size }}px;
+    height: {{ block.settings.icon_size }}px;
+    border-radius: 50%;
+    background-color: {{ block.settings.icon_background }};
+    border: {{ block.settings.icon_border_width }}px solid {{ block.settings.icon_border_color }};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: {{ block.settings.icon_color }};
+    flex-shrink: 0;
+    transition: background-color {{ block.settings.animation_duration }}s ease-in-out, border-color {{ block.settings.animation_duration }}s ease-in-out;
+  }
+
+  .ai-order-timeline-icon-{{ ai_gen_id }}.completed {
+    background-color: {{ block.settings.line_filled_color }};
+    border-color: {{ block.settings.line_filled_color }};
+  }
+
+  .ai-order-timeline-icon-{{ ai_gen_id }} svg {
+    width: calc({{ block.settings.icon_size }}px * 0.5);
+    height: calc({{ block.settings.icon_size }}px * 0.5);
+  }
+
+  .ai-order-timeline-title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    font-weight: 600;
+    color: {{ block.settings.title_color }};
+    text-align: center;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .ai-order-timeline-text-{{ ai_gen_id }} {
+    font-size: {{ block.settings.text_size }}px;
+    color: {{ block.settings.text_color }};
+    text-align: center;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ai-order-timeline-line-progress-{{ ai_gen_id }},
+    .ai-order-timeline-ship-{{ ai_gen_id }},
+    .ai-order-timeline-icon-{{ ai_gen_id }} {
+      transition: none;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-order-timeline-{{ ai_gen_id }} {
+      padding: {{ block.settings.padding_top_mobile }}px {{ block.settings.padding_horizontal_mobile }}px {{ block.settings.padding_bottom_mobile }}px;
+    }
+
+    .ai-order-timeline-stages-{{ ai_gen_id }} {
+      gap: {{ block.settings.stage_spacing_mobile }}px;
+    }
+
+    .ai-order-timeline-icon-{{ ai_gen_id }} {
+      width: {{ block.settings.icon_size_mobile }}px;
+      height: {{ block.settings.icon_size_mobile }}px;
+    }
+
+    .ai-order-timeline-icon-{{ ai_gen_id }} svg {
+      width: calc({{ block.settings.icon_size_mobile }}px * 0.5);
+      height: calc({{ block.settings.icon_size_mobile }}px * 0.5);
+    }
+
+    .ai-order-timeline-line-wrapper-{{ ai_gen_id }} {
+      top: {{ block.settings.icon_size_mobile | divided_by: 2 }}px;
+      left: {{ block.settings.icon_size_mobile | divided_by: 2 }}px;
+      right: {{ block.settings.icon_size_mobile | divided_by: 2 }}px;
+    }
+
+    .ai-order-timeline-title-{{ ai_gen_id }} {
+      font-size: {{ block.settings.title_size_mobile }}px;
+    }
+
+    .ai-order-timeline-text-{{ ai_gen_id }} {
+      font-size: {{ block.settings.text_size_mobile }}px;
+    }
+
+    .ai-order-timeline-ship-{{ ai_gen_id }} {
+      width: {{ block.settings.ship_size_mobile }}px;
+      height: {{ block.settings.ship_size_mobile }}px;
+    }
+
+    .ai-order-timeline-stage-{{ ai_gen_id }} {
+      gap: {{ block.settings.text_spacing_mobile }}px;
+    }
+  }
+{% endstyle %}
+
+<order-timeline-{{ ai_gen_id }}
+  class="ai-order-timeline-{{ ai_gen_id }}"
+  data-animation-duration="{{ block.settings.animation_duration }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-order-timeline-container-{{ ai_gen_id }}">
+    <div class="ai-order-timeline-stages-{{ ai_gen_id }}">
+      <div class="ai-order-timeline-line-wrapper-{{ ai_gen_id }}">
+        <div class="ai-order-timeline-line-bg-{{ ai_gen_id }}"></div>
+        <div class="ai-order-timeline-line-progress-{{ ai_gen_id }}"></div>
+        <div class="ai-order-timeline-ship-{{ ai_gen_id }}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 13.5L2.25 12H7.5L6.5 10.5H2L1 9H6L5 7.5H1L0 6H5.5L4.5 4.5H0.5L0 3.75V3H4L3 1.5H8.5L10.5 4.5H18C19.1 4.5 20 5.4 20 6.5V8.5L23 12V18H20.5C20.5 19.38 19.38 20.5 18 20.5C16.62 20.5 15.5 19.38 15.5 18H8.5C8.5 19.38 7.38 20.5 6 20.5C4.62 20.5 3.5 19.38 3.5 18H1V13.5H3ZM6 19C6.83 19 7.5 18.33 7.5 17.5C7.5 16.67 6.83 16 6 16C5.17 16 4.5 16.67 4.5 17.5C4.5 18.33 5.17 19 6 19ZM18 19C18.83 19 19.5 18.33 19.5 17.5C19.5 16.67 18.83 16 18 16C17.17 16 16.5 16.67 16.5 17.5C16.5 18.33 17.17 19 18 19Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="ai-order-timeline-stage-{{ ai_gen_id }}">
+        <div class="ai-order-timeline-icon-{{ ai_gen_id }} ai-order-timeline-icon-1-{{ ai_gen_id }}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+        </div>
+        {%- if block.settings.stage_1_title != blank -%}
+          <h3 class="ai-order-timeline-title-{{ ai_gen_id }}">{{ block.settings.stage_1_title }}</h3>
+        {%- endif -%}
+        {%- if block.settings.stage_1_text != blank -%}
+          <p class="ai-order-timeline-text-{{ ai_gen_id }}">{{ block.settings.stage_1_text }}</p>
+        {%- endif -%}
+      </div>
+
+      <div class="ai-order-timeline-stage-{{ ai_gen_id }}">
+        <div class="ai-order-timeline-icon-{{ ai_gen_id }} ai-order-timeline-icon-2-{{ ai_gen_id }}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+        </div>
+        {%- if block.settings.stage_2_title != blank -%}
+          <h3 class="ai-order-timeline-title-{{ ai_gen_id }}">{{ block.settings.stage_2_title }}</h3>
+        {%- endif -%}
+        {%- if block.settings.stage_2_text != blank -%}
+          <p class="ai-order-timeline-text-{{ ai_gen_id }}">{{ block.settings.stage_2_text }}</p>
+        {%- endif -%}
+      </div>
+
+      <div class="ai-order-timeline-stage-{{ ai_gen_id }}">
+        <div class="ai-order-timeline-icon-{{ ai_gen_id }} ai-order-timeline-icon-3-{{ ai_gen_id }}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </div>
+        {%- if block.settings.stage_3_title != blank -%}
+          <h3 class="ai-order-timeline-title-{{ ai_gen_id }}">{{ block.settings.stage_3_title }}</h3>
+        {%- endif -%}
+        {%- if block.settings.stage_3_text != blank -%}
+          <p class="ai-order-timeline-text-{{ ai_gen_id }}">{{ block.settings.stage_3_text }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</order-timeline-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class OrderTimeline{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.progressLine = null;
+        this.ship = null;
+        this.icons = [];
+        this.observer = null;
+        this.animationDuration = parseFloat(this.dataset.animationDuration) || 3;
+        this.hasAnimated = false;
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      }
+
+      connectedCallback() {
+        this.progressLine = this.querySelector('.ai-order-timeline-line-progress-{{ ai_gen_id }}');
+        this.ship = this.querySelector('.ai-order-timeline-ship-{{ ai_gen_id }}');
+        this.icons = [
+          this.querySelector('.ai-order-timeline-icon-1-{{ ai_gen_id }}'),
+          this.querySelector('.ai-order-timeline-icon-2-{{ ai_gen_id }}'),
+          this.querySelector('.ai-order-timeline-icon-3-{{ ai_gen_id }}')
+        ];
+        
+        if (!this.progressLine || !this.ship) return;
+
+        this.setupIntersectionObserver();
+      }
+
+      setupIntersectionObserver() {
+        const options = {
+          root: null,
+          rootMargin: '0px',
+          threshold: 0.3
+        };
+
+        this.observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              this.startAnimation();
+            } else {
+              this.resetAnimation();
+            }
+          });
+        }, options);
+
+        this.observer.observe(this);
+      }
+
+      startAnimation() {
+        if (this.prefersReducedMotion) {
+          this.progressLine.style.width = '100%';
+          this.ship.style.left = '100%';
+          this.icons.forEach(icon => {
+            if (icon) icon.classList.add('completed');
+          });
+          return;
+        }
+
+        requestAnimationFrame(() => {
+          this.progressLine.style.width = '100%';
+          this.ship.style.left = '100%';
+          
+          const duration = this.animationDuration * 1000;
+          const icon1Time = duration * 0;
+          const icon2Time = duration * 0.5;
+          const icon3Time = duration * 1;
+
+          if (this.icons[0]) {
+            setTimeout(() => {
+              this.icons[0].classList.add('completed');
+            }, icon1Time);
+          }
+
+          if (this.icons[1]) {
+            setTimeout(() => {
+              this.icons[1].classList.add('completed');
+            }, icon2Time);
+          }
+
+          if (this.icons[2]) {
+            setTimeout(() => {
+              this.icons[2].classList.add('completed');
+            }, icon3Time);
+          }
+        });
+      }
+
+      resetAnimation() {
+        if (this.prefersReducedMotion) {
+          this.progressLine.style.width = '0%';
+          this.ship.style.left = '0%';
+          this.icons.forEach(icon => {
+            if (icon) icon.classList.remove('completed');
+          });
+          return;
+        }
+
+        this.progressLine.style.width = '0%';
+        this.ship.style.left = '0%';
+        this.icons.forEach(icon => {
+          if (icon) icon.classList.remove('completed');
+        });
+      }
+
+      disconnectedCallback() {
+        if (this.observer) {
+          this.observer.disconnect();
+        }
+      }
+    }
+
+    customElements.define('order-timeline-{{ ai_gen_id }}', OrderTimeline{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Order progress timeline",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Stage 1"
+    },
+    {
+      "type": "text",
+      "id": "stage_1_title",
+      "label": "Title",
+      "default": "Order Placed"
+    },
+    {
+      "type": "text",
+      "id": "stage_1_text",
+      "label": "Text",
+      "default": "Day 1"
+    },
+    {
+      "type": "header",
+      "content": "Stage 2"
+    },
+    {
+      "type": "text",
+      "id": "stage_2_title",
+      "label": "Title",
+      "default": "Shipped"
+    },
+    {
+      "type": "text",
+      "id": "stage_2_text",
+      "label": "Text",
+      "default": "Day 2"
+    },
+    {
+      "type": "header",
+      "content": "Stage 3"
+    },
+    {
+      "type": "text",
+      "id": "stage_3_title",
+      "label": "Title",
+      "default": "Delivered"
+    },
+    {
+      "type": "text",
+      "id": "stage_3_text",
+      "label": "Text",
+      "default": "Day 3"
+    },
+    {
+      "type": "header",
+      "content": "Animation"
+    },
+    {
+      "type": "range",
+      "id": "animation_duration",
+      "label": "Animation speed",
+      "min": 1,
+      "max": 10,
+      "step": 0.5,
+      "unit": "s",
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "ship_size",
+      "label": "Ship size",
+      "min": 20,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "ship_size_mobile",
+      "label": "Ship size (mobile)",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 32
+    },
+    {
+      "type": "color",
+      "id": "ship_color",
+      "label": "Ship color",
+      "default": "#7b5ea7"
+    },
+    {
+      "type": "header",
+      "content": "Progress line"
+    },
+    {
+      "type": "range",
+      "id": "line_thickness",
+      "label": "Line thickness",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "color",
+      "id": "line_unfilled_color",
+      "label": "Unfilled color",
+      "default": "#dfdfdf"
+    },
+    {
+      "type": "color",
+      "id": "line_filled_color",
+      "label": "Filled color",
+      "default": "#7b5ea7"
+    },
+    {
+      "type": "header",
+      "content": "Stage icons"
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "label": "Icon size",
+      "min": 40,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "icon_size_mobile",
+      "label": "Icon size (mobile)",
+      "min": 32,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "color",
+      "id": "icon_background",
+      "label": "Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#7b5ea7"
+    },
+    {
+      "type": "color",
+      "id": "icon_border_color",
+      "label": "Border color",
+      "default": "#7b5ea7"
+    },
+    {
+      "type": "range",
+      "id": "icon_border_width",
+      "label": "Border width",
+      "min": 0,
+      "max": 6,
+      "step": 1,
+      "unit": "px",
+      "default": 2
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title size",
+      "min": 12,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "title_size_mobile",
+      "label": "Title size (mobile)",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title color",
+      "default": "#1a1a2e"
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "label": "Text size",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 13
+    },
+    {
+      "type": "range",
+      "id": "text_size_mobile",
+      "label": "Text size (mobile)",
+      "min": 8,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "default": 11
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#6b6b6b"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "stage_spacing",
+      "label": "Stage spacing",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "stage_spacing_mobile",
+      "label": "Stage spacing (mobile)",
+      "min": 5,
+      "max": 40,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "text_spacing",
+      "label": "Text spacing",
+      "min": 4,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "text_spacing_mobile",
+      "label": "Text spacing (mobile)",
+      "min": 2,
+      "max": 16,
+      "step": 2,
+      "unit": "px",
+      "default": 6
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Maximum width",
+      "min": 400,
+      "max": 1200,
+      "step": 50,
+      "unit": "px",
+      "default": 800
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_horizontal",
+      "label": "Horizontal padding",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Top padding (mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Bottom padding (mobile)",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_horizontal_mobile",
+      "label": "Horizontal padding (mobile)",
+      "min": 0,
+      "max": 60,
+      "step": 4,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Order progress timeline"
+    }
+  ]
+}
+{% endschema %}
