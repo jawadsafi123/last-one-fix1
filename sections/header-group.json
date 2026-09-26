@@ -36,7 +36,7 @@
           "blocks": {}
         },
         "countdown_1": {
-          "type": "_countdown",
+          "type": "countdown",
           "settings": {
             "label": "Limited-time offer ends in",
             "end_date": "2026-10-03T08:00:00+00:00",
