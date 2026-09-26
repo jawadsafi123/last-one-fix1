@@ -1,8 +1,21 @@
 {%- liquid
-  assign body_font_url = settings.type_body_font | font_url
-  assign subheading_font_url = settings.type_subheading_font | font_url
-  assign heading_font_url = settings.type_heading_font | font_url
-  assign accent_font_url = settings.type_accent_font | font_url
+  assign body_font_url = ''
+  assign subheading_font_url = ''
+  assign heading_font_url = ''
+  assign accent_font_url = ''
+
+  unless settings.type_body_font.system?
+    assign body_font_url = settings.type_body_font | font_url
+  endunless
+  unless settings.type_subheading_font.system?
+    assign subheading_font_url = settings.type_subheading_font | font_url
+  endunless
+  unless settings.type_heading_font.system?
+    assign heading_font_url = settings.type_heading_font | font_url
+  endunless
+  unless settings.type_accent_font.system?
+    assign accent_font_url = settings.type_accent_font | font_url
+  endunless
 -%}
 
 {%- unless settings.type_body_font.system? -%}
