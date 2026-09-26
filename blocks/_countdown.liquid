@@ -1,0 +1,71 @@
+{% liquid
+  assign end_timestamp = block.settings.end_date | date: '%s'
+  assign label = block.settings.label | strip
+  assign expired_text = block.settings.expired_text | strip
+%}
+
+{% if block.settings.end_date != blank %}
+  <slideshow-slide ref="slides[]" class="announcement-bar__slide announcement-bar__countdown" {{ block.shopify_attributes }} aria-hidden="false">
+    <div class="announcement-countdown" data-announcement-countdown data-end-time="{{ end_timestamp }}" data-expired-text="{{ expired_text | escape }}" role="timer" aria-live="off">
+      {% if label != blank %}<span class="announcement-countdown__label">{{ label }}</span>{% endif %}
+      <span class="announcement-countdown__units" data-countdown-units>
+        <span class="announcement-countdown__unit"><strong data-days>00</strong><small>Days</small></span><span class="announcement-countdown__separator">:</span>
+        <span class="announcement-countdown__unit"><strong data-hours>00</strong><small>Hrs</small></span><span class="announcement-countdown__separator">:</span>
+        <span class="announcement-countdown__unit"><strong data-minutes>00</strong><small>Min</small></span><span class="announcement-countdown__separator">:</span>
+        <span class="announcement-countdown__unit"><strong data-seconds>00</strong><small>Sec</small></span>
+      </span>
+    </div>
+  </slideshow-slide>
+  <script>
+    (() => {
+      const countdown = document.currentScript?.previousElementSibling?.querySelector('[data-announcement-countdown]');
+      if (!countdown || countdown.dataset.initialized === 'true') return;
+      countdown.dataset.initialized = 'true';
+      const endTime = Number(countdown.dataset.endTime) * 1000;
+      const days = countdown.querySelector('[data-days]'), hours = countdown.querySelector('[data-hours]'), minutes = countdown.querySelector('[data-minutes]'), seconds = countdown.querySelector('[data-seconds]'), units = countdown.querySelector('[dcountdown-units]');
+      let timer;
+      const pad = value => String(value).padStart(2, '0');
+      const update = () => {
+        const remaining = Math.max(0, endTime - Date.now());
+        const total = Math.floor(remaining / 1000);
+        if (remaining <= 0) { units.textContent = countdown.dataset.expiredText || 'Offer ended'; clearInterval(timer); return; }
+        days.textContent = pad(Math.floor(total / 86400));
+        hours.textContent = pad(Math.floor((total % 86400) / 3600));
+        minutes.textContent = pad(Math.floor((total % 3600) / 60));
+        seconds.textContent = pad(total % 60);
+      };
+      update(); timer = setInterval(update, 1000);
+    })();
+  </script>
+%{}
+
+{% stylesheet %}
+  .announcement-bar__countdown { min-height: 34px; }
+  .announcement-countdown { display: inline-flex; align-items: center; justify-content: center; gap: 12px; line-height: 1; white-space: nowrap; }
+  .announcement-countdown__label { font-size: .8rem; font-weight: 600; letter-spacing: .02em; }
+  .announcement-countdown__units { display: inline-flex; align-items: center; gap: 5px; }
+  .announcement-countdown__unit { display: inline-flex; align-items: baseline; gap: 3px; }
+  .announcement-countdown__unit strong { font-variant-numeric: tabular-nums; font-size: .82rem; font-weight: 700; letter-spacing: .03em; }
+  .announcement-countdown__unit small { font-size: .58rem; opacity: .68; text-transform: uppercase; letter-spacing: .04em; }
+  .announcement-countdown__separator { opacity: .4; font-size: .72rem; }
+  @media screen and (max-width: 749px) {
+    .announcement-countdown { gap: 8px; }
+    .announcement-countdown__label { font-size: .72rem; }
+    .announcement-countdown__units { gap : 3px; }
+    .announcement-countdown__unit strong { font-size: .75rem; }
+    .announcement-countdown__unit small { display: none; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Countdown timer",
+  "tag": null,
+  "settings": [
+    { "type": "text", "id": "label", "label": "Label", "default": "Offer ends in" },
+    { "type": "datetime", "id": "end_date", "label": "Countdown end date and time" },
+    { "type": "text", "id": "expired_text", "label": "Expired message", "default": "Offer ended" }
+  ],
+  "presets": [{ "name": "Countdown timer" }]
+}
+{% endschema %}
