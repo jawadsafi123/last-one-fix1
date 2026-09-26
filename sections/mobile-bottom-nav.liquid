@@ -1,0 +1,298 @@
+{%- doc -%}
+  Floating mobile bottom navigation bar (5 icon tabs).
+  Renders site-wide via sections/footer-group.json (position: fixed, so
+  its DOM location does not matter). Hidden above 749px by default since
+  this is a mobile app style pattern; the store's normal header nav
+  still handles desktop.
+{%- enddoc -%}
+
+{%- liquid
+  assign current_path = request.path
+  assign home_url = section.settings.home_url | default: '/'
+  assign wishlist_url = section.settings.wishlist_url
+  assign shop_url = section.settings.shop_url | default: '/collections/all'
+  assign account_url = section.settings.account_url | default: '/account'
+  assign notifications_url = section.settings.notifications_url
+
+  assign is_home = false
+  assign is_wishlist = false
+  assign is_shop = false
+  assign is_account = false
+  assign is_notifications = false
+
+  if current_path == '/' or current_path == home_url
+    assign is_home = true
+  endif
+
+  if wishlist_url != blank and current_path == wishlist_url
+    assign is_wishlist = true
+  endif
+
+  if current_path contains '/collections' or current_path contains '/products'
+    assign is_shop = true
+  endif
+
+  if current_path contains '/account'
+    assign is_account = true
+  endif
+
+  if notifications_url != blank and current_path == notifications_url
+    assign is_notifications = true
+  endif
+-%}
+
+{%- if section.settings.enable_bar -%}
+  <nav
+    class="mobile-bottom-nav-{{ section.id }}"
+    aria-label="{{ 'sections.header.mobile_bottom_nav' | t: default: 'Primary mobile navigation' }}"
+  >
+    <a
+      href="{{ home_url }}"
+      class="mobile-bottom-nav__tab-{{ section.id }} {% if is_home %}is-active-{{ section.id }}{% endif %}"
+      aria-label="Home"
+      {% if is_home %}aria-current="page"{% endif %}
+    >
+      <span class="mobile-bottom-nav__indicator-{{ section.id }}" aria-hidden="true"></span>
+      <span class="mobile-bottom-nav__icon-{{ section.id }}" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12l9-9 9 9"></path>
+          <path d="M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10"></path>
+        </svg>
+      </span>
+    </a>
+
+    <a
+      href="{{ wishlist_url | default: '#' }}"
+      class="mobile-bottom-nav__tab-{{ section.id }} {% if is_wishlist %}is-active-{{ section.id }}{% endif %}"
+      aria-label="Wishlist"
+      {% if is_wishlist %}aria-current="page"{% endif %}
+    >
+      <span class="mobile-bottom-nav__indicator-{{ section.id }}" aria-hidden="true"></span>
+      <span class="mobile-bottom-nav__icon-{{ section.id }}" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </span>
+    </a>
+
+    <a
+      href="{{ shop_url }}"
+      class="mobile-bottom-nav__tab-{{ section.id }} mobile-bottom-nav__tab--center-{{ section.id }} {% if is_shop %}is-active-{{ section.id }}{% endif %}"
+      aria-label="Shop"
+      {% if is_shop %}aria-current="page"{% endif %}
+    >
+      <span class="mobile-bottom-nav__indicator-{{ section.id }}" aria-hidden="true"></span>
+      <span class="mobile-bottom-nav__icon-{{ section.id }}" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+      </span>
+    </a>
+
+    <a
+      href="{{ account_url }}"
+      class="mobile-bottom-nav__tab-{{ section.id }} {% if is_account %}is-active-{{ section.id }}{% endif %}"
+      aria-label="Account"
+      {% if is_account %}aria-current="page"{% endif %}
+    >
+      <span class="mobile-bottom-nav__indicator-{{ section.id }}" aria-hidden="true"></span>
+      <span class="mobile-bottom-nav__icon-{{ section.id }}" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </span>
+    </a>
+
+    <a
+      href="{{ notifications_url | default: '#' }}"
+      class="mobile-bottom-nav__tab-{{ section.id }} {% if is_notifications %}is-active-{{ section.id }}{% endif %}"
+      aria-label="Notifications"
+      {% if is_notifications %}aria-current="page"{% endif %}
+    >
+      <span class="mobile-bottom-nav__indicator-{{ section.id }}" aria-hidden="true"></span>
+      <span class="mobile-bottom-nav__icon-{{ section.id }}" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </span>
+    </a>
+  </nav>
+{%- endif -%}
+
+{% style %}
+  .mobile-bottom-nav-{{ section.id }} {
+    display: none;
+  }
+
+  @media screen and (max-width: 749px) {
+    body {
+      padding-bottom: calc(64px + 32px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-bottom-nav-{{ section.id }} {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      width: calc(100% - 32px);
+      max-width: 400px;
+      height: 64px;
+      padding: 0 12px;
+      border-radius: 28px;
+      background: {{ section.settings.background_color }};
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      z-index: 30;
+    }
+  }
+
+  .mobile-bottom-nav__tab-{{ section.id }} {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: {{ section.settings.icon_color }};
+    text-decoration: none;
+  }
+
+  .mobile-bottom-nav__icon-{{ section.id }} {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    transition: color 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+  }
+
+  .mobile-bottom-nav__icon-{{ section.id }} svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .mobile-bottom-nav__indicator-{{ section.id }} {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 22px;
+    height: 3px;
+    border-radius: 100px;
+    background: {{ section.settings.active_color }};
+    box-shadow: 0 0 10px 1px {{ section.settings.active_color }};
+    transition: transform 0.25s ease;
+  }
+
+  .mobile-bottom-nav__tab-{{ section.id }}.is-active-{{ section.id }} .mobile-bottom-nav__indicator-{{ section.id }} {
+    transform: translateX(-50%) scaleX(1);
+  }
+
+  .mobile-bottom-nav__tab-{{ section.id }}.is-active-{{ section.id }} .mobile-bottom-nav__icon-{{ section.id }} {
+    color: {{ section.settings.active_color }};
+    filter: drop-shadow(0 0 8px {{ section.settings.active_color }});
+    transform: translateY(-1px) scale(1.08);
+  }
+
+  .mobile-bottom-nav__tab-{{ section.id }}:active .mobile-bottom-nav__icon-{{ section.id }} {
+    transform: scale(0.9);
+  }
+{% endstyle %}
+
+{% schema %}
+{
+  "name": "Mobile bottom navigation",
+  "tag": null,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable_bar",
+      "label": "Enable bottom navigation bar",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Bar background color",
+      "default": "#1a1a2e"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#9a9aa8"
+    },
+    {
+      "type": "color",
+      "id": "active_color",
+      "label": "Active tab color (glow + indicator)",
+      "default": "#ff3b30"
+    },
+    {
+      "type": "header",
+      "content": "Home"
+    },
+    {
+      "type": "url",
+      "id": "home_url",
+      "label": "Link",
+      "default": "/"
+    },
+    {
+      "type": "header",
+      "content": "Wishlist"
+    },
+    {
+      "type": "url",
+      "id": "wishlist_url",
+      "label": "Link",
+      "info": "Leave blank until a wishlist app is installed. The icon will show but will not navigate anywhere."
+    },
+    {
+      "type": "header",
+      "content": "Shop (center button)"
+    },
+    {
+      "type": "url",
+      "id": "shop_url",
+      "label": "Link",
+      "default": "/collections/all"
+    },
+    {
+      "type": "header",
+      "content": "Account"
+    },
+    {
+      "type": "url",
+      "id": "account_url",
+      "label": "Link",
+      "default": "/account"
+    },
+    {
+      "type": "header",
+      "content": "Notifications"
+    },
+    {
+      "type": "url",
+      "id": "notifications_url",
+      "label": "Link",
+      "info": "Shopify has no built-in notification center. Leave blank, or point this at a page/app you actually use (e.g. a Sale collection)."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Mobile bottom navigation"
+    }
+  ]
+}
+{% endschema %}
