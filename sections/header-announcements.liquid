@@ -1,6 +1,39 @@
-Cgp7JSBpZiBzZWN0aW9uLmJsb2Nrcy5zaXplID4gMSAlfQogIDxzY3JpcHQKICAgIHNyYz0ie3sgJ2Fubm91bmNlbWVudC1iYXIuanMnIHwgYXNzZXRfdXJsIH19IgogICAgdHlwZT0ibW9kdWxlIgogICAgZmV0Y2hwcmlvcml0eT0ibG93IgogID48L3NjcmlwdD4KeyUgZW5kaWYgJX0KCnslIHJlbmRlciAnY29udHJhc3Qtb3ZlcnJpZGUnLCBiYWNrZ3JvdW5kX2NvbG9yOiBzZWN0aW9uLnNldHRpbmdzLmJhY2tncm91bmRfY29sb3IsIHNlY3Rpb25faWQ6IHNlY3Rpb24uaWQgJX0KCjxkaXYgY2xhc3M9InNlY3Rpb24tYmFja2dyb3VuZCBjb2xvci1jdXN0b20te3sgc2VjdGlvbi5pZCB9fSI+PC9kaXY+Cjxhc2lkZQogIGNsYXNzPSJhbm5vdW5jZW1lbnQtYmFyIHNwYWNpbmctc3R5bGUgc2VjdGlvbiBzZWN0aW9uLS17eyBzZWN0aW9uLnNldHRpbmdzLnNlY3Rpb25fd2lkdGggfX0gY29sb3ItY3VzdG9tLXt7IHNlY3Rpb24uaWQgfX0iCiAgc3R5bGU9InslIHJlbmRlciAnc3BhY2luZy1wYWRkaW5nJywgc2V0dGluZ3M6IHNlY3Rpb24uc2V0dGluZ3MgJX07IC0tYm9yZGVyLWJvdHRvbS13aWR0aDoge3sgc2VjdGlvbi5zZXR0aW5ncy5kaXZpZGVyX3dpZHRoIH19cHg7eyUgaWYgc2VjdGlvbi5zZXR0aW5ncy5kaXZpZGVyX2NvbG9yICE9IGJsYW5rICV9IC0tY29sb3ItYm9yZGVyOiB7eyBzZWN0aW9uLnNldHRpbmdzLmRpdmlkZXJfY29sb3IgfX07eyUgZW5kaWYgJX0iCj4KICB7JSBsaXF1aWQKICAgIGFzc2lnbiBhdXRvcGxheSA9IGZhbHNlCiAgICBhc3NpZ24gc2hvd19hcnJvd3MgPSBmYWxzZQogICAgfWlmIHNlY3Rpb24uYmxvY2tzLnNpemUgPiAxCiAgICAgIGFzc2lnbiBhdXRvcGxheSA9IHRydWUKICAgICAgYXNzaWduIHNob3dfYXJyb3dzID0gdHJ1ZQogICAgZW5kaWYKIH0K
 
-  <announcement-bar-component class="announcement-bar__slider" {% if autoplay == true %}autoplay="{{ section.settings.speed }}" aria-live="polite"{% endif %}>
+
+{% if section.blocks.size > 1 %}
+  <script
+    src="{{ 'announcement-bar.js' | asset_url }}"
+    type="module"
+    fetchpriority="low"
+  ></script>
+{% endif %}
+
+{% render 'contrast-override', background_color: section.settings.background_color, section_id: section.id %}
+
+<div class="section-background color-custom-{{ section.id }}"></div>
+<aside
+  class="announcement-bar spacing-style section section--{{ section.settings.section_width }} color-custom-{{ section.id }}"
+  style="{% render 'spacing-padding', settings: section.settings %}; --border-bottom-width: {{ section.settings.divider_width }}px;{% if section.settings.divider_color != blank %} --color-border: {{ section.settings.divider_color }};{% endif %}"
+>
+  {% liquid
+    assign autoplay = false
+    assign show_arrows = false
+    if section.blocks.size > 1
+      assign autoplay = true
+      assign show_arrows = true
+    endif
+  %}
+
+  <announcement-bar-component
+    class="announcement-bar__slider"
+    {% if autoplay == true %}
+      autoplay="{{ section.settings.speed }}" aria-live="polite"
+    {% endif %}
+  >
+    {% if show_arrows %}
+      {% render 'slideshow-arrows', icon_style: 'chevron' %}
+    {% endif %}
+
     <div class="announcement-bar__slides">
       {% content_for 'blocks' %}
     </div>
@@ -8,16 +41,189 @@ Cgp7JSBpZiBzZWN0aW9uLmJsb2Nrcy5zaXplID4gMSAlfQogIDxzY3JpcHQKICAgIHNyYz0ie3sgJ2Fu
 </aside>
 
 {% stylesheet %}
-.announcement-bar__slides { display: grid; grid-template-columns: [stack] auto / [stack] auto; width: calc(100% - var(--button-size) * 2); max-width: 680px; margin-inline: auto; }
-.announcement-bar__slides > * { grid-area: stack; }
+  .announcement-bar {
+    border-block-end: var(--border-bottom-width) solid var(--color-border);
+  }
+
+  .announcement-bar__slider {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+
+    @media screen and (max-width: 749px) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .announcement-bar__slides {
+    display: grid;
+    grid: [stack] auto / [stack] auto;
+    width: calc(100% - var(--button-size) * 2);
+    max-width: 680px;
+    margin-inline: auto;
+  }
+
+  .announcement-bar__slides > * {
+    grid-area: stack;
+  }
+
+  .announcement-bar__slide {
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    content-visibility: visible;
+
+    &[aria-hidden='true'] {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  .announcement-bar__slider slideshow-arrows {
+    padding: 0;
+    mix-blend-mode: normal;
+  }
+
+  .announcement-bar__slider slideshow-arrows .slideshow-control {
+    color: var(--color-foreground);
+  }
+
+  .announcement-bar__slider .slideshow-control {
+    display: flex;
+    padding: 0;
+    width: var(--button-size);
+    height: var(--button-size);
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    animation: none;
+
+    @media screen and (min-width: 750px) {
+      --slideshow-control-offset: calc((var(--button-size) - var(--icon-size-xs)) / 2);
+
+      .section--page-width &.slideshow-control--previous {
+        transform: translateX(var(--slideshow-control-offset));
+      }
+    }
+  }
+
+  .announcement-bar__slider .slideshow-control .svg-wrapper {
+    width: var(--icon-size-xs);
+    height: var(--icon-size-xs);
+  }
+
+  .announcement-bar__slide {
+    place-content: center;
+  }
+
+  .announcement-bar__text:first-child {
+    margin: 0;
+  }
+
+  .announcement-bar__link {
+    position: absolute;
+    inset: 0;
+  }
 {% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:names.announcement_bar",
-  "blocks": [{"type":"_announcement"},{"type":"_countdown"}],
-  "enabled_on": {"groups":["header"]},
-  "settings": [{"type":"range","id":"speed","label":"t:settings.scroll_speed","min":2,"max":10,"default":5,"unit":"sec"},{"type":"header","content":"t:content.appearance"},{"type":"select","id":"section_width","label":"t:settings.section_width","options":[{"value":"page-width","label":"t:options.page"},{"value":"full-width","label":"t:options.full"}],"default":"page-width"},{"type":"color","id":"background_color","label":"t:settings.background_color","placeholder":"t:settings.default"},{"type":"range","id":"divider_width","label":"t:settings.divider_thickness","min":0,"max":5,"step":0.5,"unit":"px","default":0},{"type":"color","id":"divider_color","label":"t:settings.divider_color","placeholder":"t:settings.default","visible_if":"{{ section.settings.divider_width > 0 }}"},{"type":"header","content":"t:content.padding"},{"type":"range","id":"padding-block-start","label":"t:settings.top","min":0,"max":100,"step":1,"unit":"px","default":15},{"type":"range","id":"padding-block-end","label":"t:settings.bottom","min":0,"max":100,"step":1,"unit":"px","default":15}],
-  "presets":[{"name":"t:names.announcement_bar","blocks":{"announcement_1":{"type":"_announcement"},"countdown_1":{"type":"_countdown"}},"block_order":["announcement_1"]}]
+  "blocks": [
+    {
+      "type": "_announcement"
+    }
+  ],
+  "enabled_on": {
+    "groups": ["header"]
+  },
+  "settings": [
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "t:settings.scroll_speed",
+      "min": 2,
+      "max": 10,
+      "default": 5,
+      "unit": "sec"
+    },
+    {
+      "type": "header",
+      "content": "t:content.appearance"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "t:settings.section_width",
+      "options": [
+        {
+          "value": "page-width",
+          "label": "t:options.page"
+        },
+        {
+          "value": "full-width",
+          "label": "t:options.full"
+        }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "t:settings.background_color",
+      "placeholder": "t:settings.default"
+    },
+    {
+      "type": "range",
+      "id": "divider_width",
+      "label": "t:settings.divider_thickness",
+      "min": 0,
+      "max": 5,
+      "step": 0.5,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "color",
+      "id": "divider_color",
+      "label": "t:settings.divider_color",
+      "placeholder": "t:settings.default",
+      "visible_if": "{{ section.settings.divider_width > 0 }}"
+    },
+    {
+      "type": "header",
+      "content": "t:content.padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "t:settings.top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "t:settings.bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:names.announcement_bar",
+      "blocks": {
+        "announcement_1": {
+          "type": "_announcement"
+        }
+      },
+      "block_order": ["announcement_1"]
+    }
+  ]
 }
 {% endschema %}
