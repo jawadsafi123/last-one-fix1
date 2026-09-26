@@ -1,4 +1,4 @@
-<div class="announcement-countdown" {{ block.shopify_attributes }} data-announcement-countdown data-end-time="{{ block.settings.end_date | date: '%s' }}" data-expired-text="{{ block.settings.expired_text | escape }}" role="timer" aria-live="off">
+<div class="announcement-countdown" {{ block.shopify_attributes }} data-announcement-countdown data-end-time="{{ block.settings.end_date | date: '%s' }}" data-expired-text="{{ block.settings.expired_text | escape }}" role="timer" aria-live="off" style="--countdown-bg: {{ block.settings.background_color }}; --countdown-text: {{ block.settings.text_color }};">
   {% if block.settings.label != blank %}
     <span class="announcement-countdown__label">{{ block.settings.label | escape }}</span>
   {% endif %}
@@ -18,7 +18,6 @@
     const script = document.currentScript;
     const countdown = script?.previousElementSibling;
     if (!countdown || countdown.dataset.initialized === 'true') return;
-
     countdown.dataset.initialized = 'true';
 
     const endTime = Number(countdown.dataset.endTime) * 1000;
@@ -54,67 +53,68 @@
 
 {% stylesheet %}
   .announcement-countdown {
-    min-height: 34px;
+    min-height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 9px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--countdown-bg);
+    color: var(--countdown-text);
     line-height: 1;
     white-space: nowrap;
   }
 
   .announcement-countdown__label {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
   }
 
   .announcement-countdown__units {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
   }
 
   .announcement-countdown__unit {
     display: inline-flex;
     align-items: baseline;
-    gap: 3px;
+    gap: 2px;
   }
 
   .announcement-countdown__unit strong {
     font-variant-numeric: tabular-nums;
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
   }
 
   .announcement-countdown__unit small {
-    font-size: 0.58rem;
-    opacity: 0.68;
+    font-size: 0.52rem;
+    opacity: 0.7;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
   }
 
   .announcement-countdown__separator {
-    opacity: 0.4;
-    font-size: 0.72rem;
+    opacity: 0.45;
+    font-size: 0.68rem;
   }
 
   @media screen and (max-width: 749px) {
     .announcement-countdown {
-      gap: 8px;
+      gap: 7px;
+      padding: 4px 8px;
     }
 
     .announcement-countdown__label {
-      font-size: 0.72rem;
-    }
-
-    .announcement-countdown__units {
-      gap: 3px;
+      font-size: 0.68rem;
     }
 
     .announcement-countdown__unit strong {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
     }
 
     .announcement-countdown__unit small {
@@ -144,6 +144,18 @@
       "id": "expired_text",
       "label": "Expired text",
       "default": "Offer ended"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#1A1A2E"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#FFFFFF"
     }
   ],
   "presets": [
