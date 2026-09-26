@@ -1,12 +1,22 @@
+{%- liquid
+  assign body_font_url = settings.type_body_font | font_url
+  assign subheading_font_url = settings.type_subheading_font | font_url
+  assign heading_font_url = settings.type_heading_font | font_url
+  assign accent_font_url = settings.type_accent_font | font_url
+-%}
+
 {%- unless settings.type_body_font.system? -%}
-  {{ settings.type_body_font | font_url | preload_tag: as: 'font', type: 'font/woff2', fetchpriority: 'low' }}
+  <link rel="preload" href="{{ body_font_url }}" as="font" type="font/woff2" crossorigin fetchpriority="low">
 {%- endunless -%}
-{%- unless settings.type_subheading_font.system? -%}
-  {{ settings.type_subheading_font | font_url | preload_tag: as: 'font', type: 'font/woff2', fetchpriority: 'low' }}
+
+{%- unless settings.type_subheading_font.system? or subheading_font_url == body_font_url -%}
+  <link rel="preload" href="{{ subheading_font_url }}" as="font" type="font/woff2" crossorigin fetchpriority="low">
 {%- endunless -%}
-{%- unless settings.type_heading_font.system? -%}
-  {{ settings.type_heading_font | font_url | preload_tag: as: 'font', type: 'font/woff2', fetchpriority: 'low' }}
+
+{%- unless settings.type_heading_font.system? or heading_font_url == body_font_url or heading_font_url == subheading_font_url -%}
+  <link rel="preload" href="{{ heading_font_url }}" as="font" type="font/woff2" crossorigin fetchpriority="low">
 {%- endunless -%}
-{%- unless settings.type_accent_font.system? -%}
-  {{ settings.type_accent_font | font_url | preload_tag: as: 'font', type: 'font/woff2', fetchpriority: 'low' }}
+
+{%- unless settings.type_accent_font.system? or accent_font_url == body_font_url or accent_font_url == subheading_font_url or accent_font_url == heading_font_url -%}
+  <link rel="preload" href="{{ accent_font_url }}" as="font" type="font/woff2" crossorigin fetchpriority="low">
 {%- endunless -%}
