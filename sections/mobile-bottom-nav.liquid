@@ -1,10 +1,10 @@
-{%- doc -%}
+{%- comment -%}
   Floating mobile bottom navigation bar (5 icon tabs).
   Renders site-wide via sections/footer-group.json (position: fixed, so
   its DOM location does not matter). Hidden above 749px by default since
   this is a mobile app style pattern; the store's normal header nav
   still handles desktop.
-{%- enddoc -%}
+{%- endcomment -%}
 
 {%- liquid
   assign current_path = request.path
@@ -245,8 +245,7 @@
     {
       "type": "url",
       "id": "home_url",
-      "label": "Link",
-      "default": "/"
+      "label": "Link"
     },
     {
       "type": "header",
@@ -275,8 +274,7 @@
     {
       "type": "url",
       "id": "account_url",
-      "label": "Link",
-      "default": "/account"
+      "label": "Link"
     },
     {
       "type": "header",
