@@ -1,0 +1,22 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "SHOPIFY_FLAG_STORE",
+      "description": "Your Shopify store URL, e.g. my-store.myshopify.com (or just the store prefix). Obtain from your Shopify admin URL.",
+      "requiredAtBoot": true
+    },
+    {
+      "name": "SHOPIFY_CLI_THEME_TOKEN",
+      "description": "A Shopify Theme Access token (from Shopify admin > Apps > Theme Access > Generate token) or a Shopify Admin API access token (from Shopify admin > Apps > Develop apps > your app > Admin API access token).",
+      "requiredAtBoot": true
+    },
+    {
+      "name": "SHOPIFY_FLAG_STORE_PASSWORD",
+      "description": "Optional: the storefront password if your store has password protection enabled (Shopify admin > Online Store > Preferences > Password protection). Leave blank if your storefront is not password-protected.",
+      "requiredAtBoot": false
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+services:
+  theme:
+    image: node:22
+    working_dir: /theme
+    volumes:
+      - ./:/theme
+      - npm_cache:/root/.npm
+    ports:
+      - "3000:3000"
+    environment:
+      # Dev server must bind all interfaces and listen on port 3000 for the preview proxy
+      - SHOPIFY_FLAG_HOST=0.0.0.0
+      - SHOPIFY_FLAG_PORT=3000
+      # Use full-page reloads (more proxy-friendly than hot-reload websockets)
+      - SHOPIFY_FLAG_LIVE_RELOAD=full-page
+      # Disable the error overlay so it doesn't obscure the preview
+      - SHOPIFY_FLAG_ERROR_OVERLAY=silent
+      # Non-interactive CLI
+      - CI=true
+    env_file:
+      - /run/base44/app.env
+    command: ["sh", "-ec", "npm install -g @shopify/cli@latest && exec shopify theme dev"]
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))\""]
+      start_period: 240s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  npm_cache:
