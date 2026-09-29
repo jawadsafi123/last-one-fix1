@@ -21,26 +21,27 @@
     if section.blocks.size > 1
       assign autoplay = true
       assign show_arrows = true
+      assign show_arrows = true
     endif
   %}
 
   <announcement-bar-component
     class="announcement-bar__slider"
-    {% if autoplay == true %}
+     {% if autoplay == true %}
       autoplay="{{ section.settings.speed }}" aria-live="polite"
-    {% endif %}
+     {% endif %}
   >
-    {% if show_arrows %}
+     {% if show_arrows %}
       {% render 'slideshow-arrows', icon_style: 'chevron' %}
-    {% endif %}
-
+     {% endif %}
     <div class="announcement-bar__slides">
-      {% content_for 'blocks' %}
+       {% content_for 'blocks' %}
     </div>
   </announcement-bar-component>
-</aside>
+ </aside>
 
-{% stylesheet %}
+%{}
+
   .announcement-bar {
     border-block-end: var(--border-bottom-width) solid var(--color-border);
   }
@@ -50,7 +51,6 @@
     flex-direction: row;
     align-items: center;
     position: relative;
-
     @media screen and (max-width: 749px) {
       grid-column: 1 / -1;
     }
@@ -71,7 +71,6 @@
   .announcement-bar__slide {
     transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
     content-visibility: visible;
-
     &[aria-hidden='true'] {
       opacity: 0;
       visibility: hidden;
@@ -96,10 +95,8 @@
     justify-content: center;
     opacity: 1;
     animation: none;
-
     @media screen and (min-width: 750px) {
       --slideshow-control-offset: calc((var(--button-size) - var(--icon-size-xs)) / 2);
-
       .section--page-width &.slideshow-control--previous {
         transform: translateX(var(--slideshow-control-offset));
       }
@@ -131,6 +128,9 @@
   "blocks": [
     {
       "type": "_announcement"
+    },
+    {
+      "type": "_countdown"
     }
   ],
   "enabled_on": {
@@ -220,10 +220,13 @@
       "blocks": {
         "announcement_1": {
           "type": "_announcement"
+        },
+       "countdown_1": {
+          "type": "_countdown"
         }
       },
       "block_order": ["announcement_1"]
     }
   ]
 }
-{% endschema %}
+%}
